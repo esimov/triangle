@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"image/color"
 )
 
 type blurstack struct {
@@ -332,7 +333,6 @@ func StackBlur(src image.Image, width, height, radius uint32) image.Image {
 			yi += width
 		}
 	}
-
 	return img
 }
 
@@ -353,14 +353,59 @@ func toNRGBA(img image.Image) *image.NRGBA {
 	dstH := dstBounds.Dy()
 	dst := image.NewNRGBA(dstBounds)
 
-	src := img.(*image.RGBA)
-	rowSize := srcBounds.Dx() * 4
-	for dstY := 0; dstY < dstH; dstY++ {
-		di := dst.PixOffset(0, dstY)
-		si := src.PixOffset(srcMinX, srcMinY+dstY)
-		for dstX := 0; dstX < dstW; dstX++ {
-			copy(dst.Pix[di:di+rowSize], src.Pix[si:si+rowSize])
+	switch src := img.(type) {
+	case *image.NRGBA:
+		rowSize := srcBounds.Dx() * 4
+		for dstY := 0; dstY < dstH; dstY++ {
+			di := dst.PixOffset(0, dstY)
+			si := src.PixOffset(srcMinX, srcMinY+dstY)
+			for dstX := 0; dstX < dstW; dstX++ {
+				copy(dst.Pix[di:di+rowSize], src.Pix[si:si+rowSize])
+			}
+		}
+	case *image.YCbCr:
+		for dstY := 0; dstY < dstH; dstY++ {
+			di := dst.PixOffset(0, dstY)
+			for dstX := 0; dstX < dstW; dstX++ {
+				srcX := srcMinX + dstX
+				srcY := srcMinY + dstY
+				siy := src.YOffset(srcX, srcY)
+				sic := src.COffset(srcX, srcY)
+				r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
+				dst.Pix[di+0] = r
+				dst.Pix[di+1] = g
+				dst.Pix[di+2] = b
+				dst.Pix[di+3] = 0xff
+				di += 4
+			}
+		}
+	case *image.Gray:
+		for dstY := 0; dstY < dstH; dstY++ {
+			di := dst.PixOffset(0, dstY)
+			si := src.PixOffset(srcMinX, srcMinY+dstY)
+			for dstX := 0; dstX < dstW; dstX++ {
+				c := src.Pix[si]
+				dst.Pix[di+0] = c
+				dst.Pix[di+1] = c
+				dst.Pix[di+2] = c
+				dst.Pix[di+3] = 0xff
+				di += 4
+				si += 2
+			}
+		}
+	default:
+		for dstY := 0; dstY < dstH; dstY++ {
+			di := dst.PixOffset(0, dstY)
+			for dstX := 0; dstX < dstW; dstX++ {
+				c := color.NRGBAModel.Convert(img.At(srcMinX+dstX, srcMinY+dstY)).(color.NRGBA)
+				dst.Pix[di+0] = c.R
+				dst.Pix[di+1] = c.G
+				dst.Pix[di+2] = c.B
+				dst.Pix[di+3] = c.A
+				di += 4
+			}
 		}
 	}
+
 	return dst
 }
