@@ -1,3 +1,34 @@
+// Go implementation of Quasimondo (Mario Klingemann) StackBlur algorithm described here:
+// http://incubator.quasimondo.com/processing/fast_blur_deluxe.php
+
+//------------------------------------------------------------------------------------
+
+// Contact: esimov@gmail.com
+//          http://www.esimov.com
+
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following
+// conditions:
+
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+// Copyright (c) 2017 Endre Simó
+//------------------------------------------------------------------------------------
+
 package main
 
 import (
@@ -149,9 +180,19 @@ func StackBlur(src image.Image, width, height, radius uint32) image.Image {
 		stackOut = stackEnd
 
 		for x = 0; x < width; x++ {
-			img.Pix[yi]   = uint8((r_sum * mul_sum) >> shg_sum)
-			img.Pix[yi+1] = uint8((g_sum * mul_sum) >> shg_sum)
-			img.Pix[yi+2] = uint8((b_sum * mul_sum) >> shg_sum)
+			pa = (a_sum * mul_sum) >> shg_sum
+			img.Pix[yi+3] = uint8(pa)
+
+			if pa != 0 {
+				pa = 255 / pa
+				img.Pix[yi]   = uint8((r_sum * mul_sum) >> shg_sum)
+				img.Pix[yi+1] = uint8((g_sum * mul_sum) >> shg_sum)
+				img.Pix[yi+2] = uint8((b_sum * mul_sum) >> shg_sum)
+			} else {
+				img.Pix[yi]   = 0
+				img.Pix[yi+1] = 0
+				img.Pix[yi+2] = 0
+			}
 
 			r_sum -= r_out_sum
 			g_sum -= g_out_sum
@@ -275,9 +316,19 @@ func StackBlur(src image.Image, width, height, radius uint32) image.Image {
 
 		for y = 0; y < height; y++ {
 			p = yi << 2
-			img.Pix[p]   = uint8((r_sum * mul_sum) >> shg_sum)
-			img.Pix[p+1] = uint8((g_sum * mul_sum) >> shg_sum)
-			img.Pix[p+2] = uint8((b_sum * mul_sum) >> shg_sum)
+			pa = (a_sum * mul_sum) >> shg_sum
+			img.Pix[p+3] = uint8(pa)
+
+			if pa > 0 {
+				pa = 255 / pa
+				img.Pix[p]   = uint8((r_sum * mul_sum) >> shg_sum)
+				img.Pix[p+1] = uint8((g_sum * mul_sum) >> shg_sum)
+				img.Pix[p+2] = uint8((b_sum * mul_sum) >> shg_sum)
+			} else {
+				img.Pix[p]   = 0
+				img.Pix[p+1] = 0
+				img.Pix[p+2] = 0
+			}
 
 			r_sum -= r_out_sum
 			g_sum -= g_out_sum
