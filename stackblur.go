@@ -1,35 +1,7 @@
-// Go implementation of Quasimondo (Mario Klingemann) StackBlur algorithm described here:
+// Go implementation of StackBlur algorithm described here:
 // http://incubator.quasimondo.com/processing/fast_blur_deluxe.php
 
-//------------------------------------------------------------------------------------
-
-// Contact: esimov@gmail.com
-//          http://www.esimov.com
-
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use,
-// copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following
-// conditions:
-
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
-// Copyright (c) 2017 Endre Simó
-//------------------------------------------------------------------------------------
-
-package main
+package triangulator
 
 import (
 	"image"
@@ -83,10 +55,8 @@ func (bs *blurstack) NewBlurStack() *blurstack {
 	return &blurstack{bs.r, bs.g, bs.b, bs.a, bs.next}
 }
 
-func StackBlur(src image.Image, width, height, radius uint32) image.Image {
+func Stackblur(src image.Image, width, height, radius uint32) image.Image {
 	var stackEnd, stackIn, stackOut *blurstack
-
-	img := toNRGBA(src)
 	var (
 		div, widthMinus1, heightMinus1, radiusPlus1, sumFactor uint32
 		x, y, i, p, yp, yi, yw,
@@ -95,6 +65,8 @@ func StackBlur(src image.Image, width, height, radius uint32) image.Image {
 		r_in_sum, g_in_sum, b_in_sum, a_in_sum,
 		pr, pg, pb, pa uint32
 	)
+
+	img := toNRGBA(src)
 
 	div 		= radius + radius + 1
 	widthMinus1 	= width - 1
@@ -121,10 +93,10 @@ func StackBlur(src image.Image, width, height, radius uint32) image.Image {
 	for y = 0; y < height; y++ {
 		r_in_sum, g_in_sum, b_in_sum, a_in_sum, r_sum, g_sum, b_sum, a_sum = 0, 0, 0, 0, 0, 0, 0, 0
 
-		pr := uint32(img.Pix[yi])
-		pg := uint32(img.Pix[yi+1])
-		pb := uint32(img.Pix[yi+2])
-		pa := uint32(img.Pix[yi+3])
+		pr = uint32(img.Pix[yi])
+		pg = uint32(img.Pix[yi+1])
+		pb = uint32(img.Pix[yi+2])
+		pa = uint32(img.Pix[yi+3])
 
 		r_out_sum = radiusPlus1 * pr
 		g_out_sum = radiusPlus1 * pg
@@ -386,7 +358,6 @@ func StackBlur(src image.Image, width, height, radius uint32) image.Image {
 	}
 	return img
 }
-
 
 // toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
 func toNRGBA(img image.Image) *image.NRGBA {
