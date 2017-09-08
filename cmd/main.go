@@ -22,7 +22,8 @@ func main() {
 	start := time.Now()
 	blur := triangulator.Stackblur(src, uint32(src.Bounds().Dx()), uint32(src.Bounds().Dy()), 2)
 	gray := triangulator.Grayscale(blur)
-	sobel := triangulator.Sobel(gray, 0)
+	sobel := triangulator.Sobel(gray, 2)
+	triangulator.GetEdgePoints(sobel, 10)
 
 	end := time.Since(start)
 	fmt.Println(end)

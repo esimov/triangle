@@ -27,11 +27,13 @@ func Sobel(src image.Image, threshold float64) image.Image {
 
 	// Get 3x3 window of pixels because image data given is just a 1D array of pixels
 	maxPixelOffset := dx * 2 + len(kernelX) - 1
+
 	data := getImageData(src)
 	length := len(data) - maxPixelOffset
 	magnitudes := make([]int32, length)
 
 	img := image.NewRGBA(src.Bounds())
+	img = img.SubImage(image.Rect(0, 0, img.Bounds().Dx()-2, img.Bounds().Dy()-2)).(*image.RGBA)
 
 	for i := 0; i < length; i++ {
 		// Sum each pixel with the kernel value
@@ -48,13 +50,19 @@ func Sobel(src image.Image, threshold float64) image.Image {
 			}
 		}
 		magnitude := math.Sqrt(float64(sumX*sumX) + float64(sumY*sumY))
+		// Check for pixel color boundaries
+		if magnitude < 0 {
+			magnitude = 0
+		} else if magnitude > 255 {
+			magnitude = 255
+		}
+
 		// Set magnitude to 0 if doesn't exceed threshold, else set to magnitude
 		if magnitude > threshold {
 			magnitudes[i] = int32(magnitude)
 		} else {
 			magnitudes[i] = 0
 		}
-
 	}
 
 	dataLength := dx * dy * 4
@@ -66,17 +74,17 @@ func Sobel(src image.Image, threshold float64) image.Image {
 		if i % 4 != 0 {
 			m := magnitudes[i / 4]
 			if m != 0 {
-				edges[i - 1] = m / 2
+				edges[i - 1] = m
 			}
 		}
 	}
 
 	// Generate the new image with the sobel filter applied.
 	for idx := 0; idx < len(edges); idx += 4 {
-		img.Pix[idx] = uint8(edges[idx])
-		img.Pix[idx+1] = uint8(edges[idx+1])
-		img.Pix[idx+2] = uint8(edges[idx+2])
-		img.Pix[idx+3] = 255
+		img.Pix[idx] 	= uint8(edges[idx])
+		img.Pix[idx+1] 	= uint8(edges[idx+1])
+		img.Pix[idx+2] 	= uint8(edges[idx+2])
+		img.Pix[idx+3] 	= 255
 	}
 	return img
 }
@@ -85,10 +93,11 @@ func Sobel(src image.Image, threshold float64) image.Image {
 func getImageData(src image.Image)[][]uint8 {
 	dx, dy := src.Bounds().Max.X, src.Bounds().Max.Y
 	img := toNRGBA(src)
+
 	pixels := make([][]uint8, dx*dy * 4)
 
 	for i := 0; i < len(pixels); i += 4 {
-		pixels[i/4] = []uint8{
+		pixels[i / 4] = []uint8{
 			img.Pix[i],
 			img.Pix[i+1],
 			img.Pix[i+2],
