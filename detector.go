@@ -2,15 +2,11 @@ package triangulator
 
 import (
 	"image"
-	"fmt"
+	//"fmt"
 	"math/rand"
 	"time"
 )
 
-type point struct {
-	x uint8
-	y uint8
-}
 const (
 	EDGE_DETECT_VALUE = 50
 	POINT_RATE = 0.075
@@ -55,7 +51,7 @@ func GetEdgePoints(src image.Image, threshold uint8)[]point {
 				sum /= total
 			}
 			if sum > threshold {
-				points = append(points, point{x: uint8(x), y: uint8(y)})
+				points = append(points, point{x: x, y: y})
 			}
 		}
 	}
@@ -74,6 +70,7 @@ func GetEdgePoints(src image.Image, threshold uint8)[]point {
 		points = append(points[:j], points[j+1:]...)
 		tlen--
 	}
-	fmt.Println(dpoints)
+	//fmt.Println(dpoints)
+	//fmt.Println("==================")
 	return dpoints
 }
