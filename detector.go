@@ -5,6 +5,7 @@ import (
 	//"fmt"
 	"math/rand"
 	"time"
+	"fmt"
 )
 
 const (
@@ -15,7 +16,7 @@ const (
 	PIXEL_LIMIT = 36000
 )
 
-func GetEdgePoints(src image.Image, threshold uint8)[]point {
+func GetEdgePoints(src image.Image, threshold int)[]point {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	width, height := src.Bounds().Max.X, src.Bounds().Max.Y
@@ -23,7 +24,7 @@ func GetEdgePoints(src image.Image, threshold uint8)[]point {
 
 	var (
 		points []point
-		sum, total uint8
+		sum, total int
 		x, y, row, col, sx, sy, step int
 		dpoints []point
 	)
@@ -40,7 +41,7 @@ func GetEdgePoints(src image.Image, threshold uint8)[]point {
 					for col = -1; col <= 1; col++ {
 						sx = x + col
 						if sx >= 0 && sx < width {
-							sum += img.Pix[(sx + step) << 2]
+							sum += int(img.Pix[(sx + step) << 2])
 							total++
 						}
 					}
@@ -55,6 +56,7 @@ func GetEdgePoints(src image.Image, threshold uint8)[]point {
 			}
 		}
 	}
+	fmt.Println("POINTS: ", len(points))
 	ilen := len(points)
 	tlen := ilen
 	limit := int(float64(ilen) * POINT_RATE)
@@ -70,7 +72,8 @@ func GetEdgePoints(src image.Image, threshold uint8)[]point {
 		points = append(points[:j], points[j+1:]...)
 		tlen--
 	}
-	//fmt.Println(dpoints)
+	fmt.Println("DPOINTS: ", len(dpoints))
+	fmt.Println("Final POINTS: ", dpoints)
 	//fmt.Println("==================")
 	return dpoints
 }
