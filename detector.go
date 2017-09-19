@@ -2,18 +2,13 @@ package triangulator
 
 import (
 	"image"
-	//"fmt"
 	"math/rand"
 	"time"
-	"fmt"
 )
 
 const (
-	EDGE_DETECT_VALUE = 50
-	POINT_RATE = 0.075
-	POINT_MAX_NUM = 2500
-	EDGE_SIZE = 5
-	PIXEL_LIMIT = 36000
+	POINT_RATE = 0.095
+	POINT_MAX_NUM = 3500
 )
 
 func GetEdgePoints(src image.Image, threshold int)[]point {
@@ -47,7 +42,6 @@ func GetEdgePoints(src image.Image, threshold int)[]point {
 					}
 				}
 			}
-
 			if total > 0 {
 				sum /= total
 			}
@@ -56,7 +50,6 @@ func GetEdgePoints(src image.Image, threshold int)[]point {
 			}
 		}
 	}
-	fmt.Println("POINTS: ", len(points))
 	ilen := len(points)
 	tlen := ilen
 	limit := int(float64(ilen) * POINT_RATE)
@@ -72,8 +65,6 @@ func GetEdgePoints(src image.Image, threshold int)[]point {
 		points = append(points[:j], points[j+1:]...)
 		tlen--
 	}
-	fmt.Println("DPOINTS: ", len(dpoints))
-	fmt.Println("Final POINTS: ", dpoints)
-	//fmt.Println("==================")
+
 	return dpoints
 }
