@@ -7,15 +7,13 @@ import (
 )
 
 const (
-	POINT_RATE = 0.095
+	POINT_RATE = 0.075
 	POINT_MAX_NUM = 3500
 )
 
-func GetEdgePoints(src image.Image, threshold int)[]point {
+func GetEdgePoints(img *image.NRGBA, threshold int)[]point {
 	rand.Seed(time.Now().UTC().UnixNano())
-
-	width, height := src.Bounds().Max.X, src.Bounds().Max.Y
-	img := toNRGBA(src)
+	width, height := img.Bounds().Max.X, img.Bounds().Max.Y
 
 	var (
 		points []point

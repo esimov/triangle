@@ -23,23 +23,23 @@ func NewCanvas(ctx *gg.Context)*Canvas {
 }
 
 func main() {
-	file, err := os.Open("brunettes_women_blue_eyes_long_2560x1440_wallpapername.com.jpg")
+	file, err := os.Open("lena_512.png")
 	defer file.Close()
+
 	src, _, err := image.Decode(file)
 	if err != nil {
 		panic(err)
 	}
+
+	img := toNRGBA(src)
 	delaunay := &tri.Delaunay{}
 
 	start := time.Now()
 	width, height := src.Bounds().Dx(), src.Bounds().Dy()
-	blur := tri.Stackblur(src, uint32(width), uint32(height), 2)
+	blur := tri.Stackblur(img, uint32(width), uint32(height), 2)
 	gray := tri.Grayscale(blur)
-	sobel := tri.Sobel(gray, 20)
+	sobel := tri.SobelFilter(gray, 20)
 	points := tri.GetEdgePoints(sobel, 50)
-
-	//os.Exit(2)
-	dst := toNRGBA(src)
 
 	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
 	fmt.Println("LEN:", len(triangles))
@@ -59,10 +59,9 @@ func main() {
 		cy := float64(p0.Y + p1.Y + p2.Y) * 0.33333
 
 		j := ((int(cx) | 0) + (int(cy) | 0) * width) * 4
-		r, g, b := dst.Pix[j], dst.Pix[j+1], dst.Pix[j+2]
-		rgb := gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255})
-		//fmt.Println(r, ":", g, ":", b)
-		ctx.SetFillStyle(rgb)
+		r, g, b := img.Pix[j], img.Pix[j+1], img.Pix[j+2]
+		ctx.SetLineWidth(0)
+		ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
 		ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R:0, G:0, B:0, A:0}))
 		ctx.Fill()
 	}

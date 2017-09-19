@@ -5,7 +5,7 @@ import (
 	"image/color"
 )
 
-func Grayscale(src image.Image) image.Image {
+func Grayscale(src *image.NRGBA) *image.NRGBA {
 	dx, dy := src.Bounds().Max.X, src.Bounds().Max.Y
 	dst := image.NewNRGBA(src.Bounds())
 	for x := 0; x < dx; x++ {
