@@ -1,5 +1,7 @@
 package triangulator
 
+import "fmt"
+
 type point struct {
 	x, y int
 }
@@ -56,7 +58,7 @@ func (e edge) isEq(edge edge) bool {
 
 type Triangle struct {
 	Nodes  []Node
-	Edges  []edge
+	edges  []edge
 	circle circle
 }
 
@@ -64,7 +66,7 @@ var t Triangle
 
 func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	t.Nodes = []Node{p0, p1, p2}
-	t.Edges = []edge{edge{newEdge(p0, p1)}, edge{newEdge(p1, p2)}, edge{newEdge(p2, p0)}}
+	t.edges = []edge{edge{newEdge(p0, p1)}, edge{newEdge(p1, p2)}, edge{newEdge(p2, p0)}}
 
 	circle := t.circle
 	ax, ay := p1.X - p0.X, p1.Y - p0.Y
@@ -122,6 +124,8 @@ func (d *Delaunay) Insert(points []point) *Delaunay {
 		temps []Triangle = []Triangle{}
 	)
 
+	fmt.Println("Points:", len(points))
+
 	for k = 0; k < len(points); k++ {
 		x = points[k].x
 		y = points[k].y
@@ -137,7 +141,7 @@ func (d *Delaunay) Insert(points []point) *Delaunay {
 			distSq = dx * dx + dy * dy
 
 			if distSq < circle.radius {
-				edges = append(edges, t.Edges[0], t.Edges[1], t.Edges[2])
+				edges = append(edges, t.edges[0], t.edges[1], t.edges[2])
 			} else {
 				temps = append(temps, t)
 			}

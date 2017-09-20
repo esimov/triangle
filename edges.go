@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	POINT_RATE = 0.075
-	POINT_MAX_NUM = 3500
+	POINT_RATE = 0.875
+	POINT_MAX_NUM = 2500
 )
 
 func GetEdgePoints(img *image.NRGBA, threshold int)[]point {
@@ -63,6 +63,5 @@ func GetEdgePoints(img *image.NRGBA, threshold int)[]point {
 		points = append(points[:j], points[j+1:]...)
 		tlen--
 	}
-
 	return dpoints
 }

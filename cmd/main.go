@@ -13,17 +13,8 @@ import (
 	"github.com/fogleman/gg"
 )
 
-type Canvas struct {
-	*gg.Context
-}
-
-// Canvas constructor
-func NewCanvas(ctx *gg.Context)*Canvas {
-	return &Canvas{ctx}
-}
-
 func main() {
-	file, err := os.Open("lena_512.png")
+	file, err := os.Open("brunettes_women_blue_eyes_long_2560x1440_wallpapername.com.jpg")
 	defer file.Close()
 
 	src, _, err := image.Decode(file)
@@ -38,18 +29,24 @@ func main() {
 	width, height := src.Bounds().Dx(), src.Bounds().Dy()
 	blur := tri.Stackblur(img, uint32(width), uint32(height), 2)
 	gray := tri.Grayscale(blur)
-	sobel := tri.SobelFilter(gray, 20)
-	points := tri.GetEdgePoints(sobel, 50)
+	sobel := tri.SobelFilter(gray, 10)
+	points := tri.GetEdgePoints(sobel, 20)
 
 	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
 	fmt.Println("LEN:", len(triangles))
 
 	ctx := gg.NewContext(width, height)
+	ctx.DrawRectangle(0, 0, float64(width), float64(height))
+	ctx.SetRGBA(1, 1, 1, 1)
+	ctx.Fill()
+
+	fmt.Println(len(triangles))
 
 	for i := 0; i < len(triangles); i++ {
 		t := triangles[i]
 		p0, p1, p2 := t.Nodes[0], t.Nodes[1], t.Nodes[2]
 
+		ctx.Push()
 		ctx.MoveTo(float64(p0.X), float64(p0.Y))
 		ctx.LineTo(float64(p1.X), float64(p1.Y))
 		ctx.LineTo(float64(p2.X), float64(p2.Y))
@@ -60,10 +57,16 @@ func main() {
 
 		j := ((int(cx) | 0) + (int(cy) | 0) * width) * 4
 		r, g, b := img.Pix[j], img.Pix[j+1], img.Pix[j+2]
-		ctx.SetLineWidth(0)
+
+		ctx.SetLineWidth(2)
 		ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
-		ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R:0, G:0, B:0, A:0}))
+		ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
+
+		ctx.StrokePreserve()
+		ctx.FillPreserve()
 		ctx.Fill()
+		ctx.Stroke()
+		ctx.Pop()
 	}
 
 	if err = ctx.SavePNG("output.png"); err != nil {
