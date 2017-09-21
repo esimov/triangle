@@ -9,12 +9,30 @@ import (
 	"log"
 	"time"
 	"fmt"
-	tri "github.com/esimov/triangulator"
+	tri "github.com/esimov/triangle"
 	"github.com/fogleman/gg"
+	"flag"
 )
 
 func main() {
-	file, err := os.Open("brunettes_women_blue_eyes_long_2560x1440_wallpapername.com.jpg")
+	var (
+		// Flags
+		source		= flag.String("in", "", "Source")
+		destination	= flag.String("out", "", "Destination")
+		blurRadius	= flag.Int("blur", 4, "Blur radius")
+		sobelThreshold	= flag.Int("sobel", 10, "Sobel filter threshold")
+		pointsThreshold	= flag.Int("points", 20, "Points threshold")
+		maxPoints	= flag.Int("max", 2500, "Maximum number of points")
+		wireframe	= flag.Bool("wireframe", false, "Wireframe mode")
+
+		blur, gray, sobel *image.NRGBA
+		triangles 	[]tri.Triangle
+		points 		[]tri.Point
+	)
+
+	flag.Parse()
+
+	file, err := os.Open(*source)
 	defer file.Close()
 
 	src, _, err := image.Decode(file)
@@ -22,25 +40,24 @@ func main() {
 		panic(err)
 	}
 
-	img := toNRGBA(src)
-	delaunay := &tri.Delaunay{}
-
-	start := time.Now()
 	width, height := src.Bounds().Dx(), src.Bounds().Dy()
-	blur := tri.Stackblur(img, uint32(width), uint32(height), 2)
-	gray := tri.Grayscale(blur)
-	sobel := tri.SobelFilter(gray, 10)
-	points := tri.GetEdgePoints(sobel, 20)
-
-	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
-	fmt.Println("LEN:", len(triangles))
-
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
 	ctx.SetRGBA(1, 1, 1, 1)
 	ctx.Fill()
 
-	fmt.Println(len(triangles))
+	delaunay := &tri.Delaunay{}
+	img := toNRGBA(src)
+
+	start := time.Now()
+	spinner("Generating triangulated image...")
+
+	blur = tri.Stackblur(img, uint32(width), uint32(height), uint32(*blurRadius))
+	gray = tri.Grayscale(blur)
+	sobel = tri.SobelFilter(gray, float64(*sobelThreshold))
+	points = tri.GetEdgePoints(sobel, *pointsThreshold, *maxPoints)
+
+	triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 
 	for i := 0; i < len(triangles); i++ {
 		t := triangles[i]
@@ -56,25 +73,28 @@ func main() {
 		cy := float64(p0.Y + p1.Y + p2.Y) * 0.33333
 
 		j := ((int(cx) | 0) + (int(cy) | 0) * width) * 4
-		r, g, b := img.Pix[j], img.Pix[j+1], img.Pix[j+2]
+		r, g, b := img.Pix[j], img.Pix[j + 1], img.Pix[j + 2]
 
 		ctx.SetLineWidth(2)
 		ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
 		ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
 
-		ctx.StrokePreserve()
-		ctx.FillPreserve()
-		ctx.Fill()
+		if !*wireframe {
+			ctx.StrokePreserve()
+			ctx.FillPreserve()
+			ctx.Fill()
+		}
 		ctx.Stroke()
 		ctx.Pop()
 	}
 
-	if err = ctx.SavePNG("output.png"); err != nil {
+	if err = ctx.SavePNG(*destination); err != nil {
 		log.Fatal(err)
 	}
 
 	end := time.Since(start)
-	fmt.Println(end)
+	fmt.Printf("\nGenerated in: %.2fs\n", end.Seconds())
+	fmt.Printf("Total number of %d triangles generated out of %d points\n", len(triangles), len(points))
 }
 
 // toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
@@ -148,4 +168,16 @@ func toNRGBA(img image.Image) *image.NRGBA {
 	}
 
 	return dst
+}
+
+// Function to visualize the rendering progress
+func spinner(message string) {
+	go func() {
+		for {
+			for _, r := range `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` {
+				fmt.Printf("\r%s%s %c%s", message, "\x1b[92m", r, "\x1b[39m")
+				time.Sleep(time.Millisecond * 100)
+			}
+		}
+	}()
 }

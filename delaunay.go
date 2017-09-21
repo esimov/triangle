@@ -1,8 +1,6 @@
 package triangulator
 
-import "fmt"
-
-type point struct {
+type Point struct {
 	x, y int
 }
 
@@ -62,7 +60,7 @@ type Triangle struct {
 	circle circle
 }
 
-var t Triangle
+var t Triangle = Triangle{}
 
 func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	t.Nodes = []Node{p0, p1, p2}
@@ -71,6 +69,7 @@ func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	circle := t.circle
 	ax, ay := p1.X - p0.X, p1.Y - p0.Y
 	bx, by := p2.X - p0.X, p2.Y - p0.Y
+
 	m := p1.X * p1.X - p0.X * p0.X + p1.Y * p1.Y - p0.Y * p0.Y
 	u := p2.X * p2.X - p0.X * p0.X + p2.Y * p2.Y - p0.Y * p0.Y
 	s := 1.0 / (2.0 * (float64(ax * by) - float64(ay * bx)))
@@ -94,8 +93,6 @@ type Delaunay struct{
 }
 
 func (d *Delaunay) Init(width, height int) *Delaunay {
-	t = Triangle{}
-
 	d.width = width
 	d.height = height
 
@@ -115,7 +112,7 @@ func (d *Delaunay) clear() {
 	d.triangles = []Triangle{t.newTriangle(p0, p1, p2), t.newTriangle(p0, p2, p3)}
 }
 
-func (d *Delaunay) Insert(points []point) *Delaunay {
+func (d *Delaunay) Insert(points []Point) *Delaunay {
 	var (
 		i, j, k int
 		x, y, dx, dy, distSq int
@@ -124,16 +121,16 @@ func (d *Delaunay) Insert(points []point) *Delaunay {
 		temps []Triangle = []Triangle{}
 	)
 
-	fmt.Println("Points:", len(points))
-
 	for k = 0; k < len(points); k++ {
 		x = points[k].x
 		y = points[k].y
+
+		triangles := d.triangles
 		edges = nil
 		temps = nil
 
 		for i = 0; i < len(d.triangles); i++ {
-			t := d.triangles[i]
+			t := triangles[i]
 
 			circle := t.circle
 			dx = circle.x - x
@@ -153,10 +150,12 @@ func (d *Delaunay) Insert(points []point) *Delaunay {
 			edge := edges[i]
 			for j = 0; j < len(polygon); j++ {
 				if edge.isEq(polygon[j]) {
+					// Remove polygon from the polygon slice
 					polygon = append(polygon[:j], polygon[j+1:]...)
 					continue edgesLoop
 				}
 			}
+			// Insert new edge into the polygon slice
 			polygon = append(polygon, edge)
 
 		}

@@ -6,20 +6,17 @@ import (
 	"time"
 )
 
-const (
-	POINT_RATE = 0.875
-	POINT_MAX_NUM = 2500
-)
+const POINT_RATE = 0.875
 
-func GetEdgePoints(img *image.NRGBA, threshold int)[]point {
+func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int)[]Point {
 	rand.Seed(time.Now().UTC().UnixNano())
 	width, height := img.Bounds().Max.X, img.Bounds().Max.Y
 
 	var (
-		points []point
+		points []Point
 		sum, total int
 		x, y, row, col, sx, sy, step int
-		dpoints []point
+		dpoints []Point
 	)
 
 	for y = 0; y < height; y++ {
@@ -44,7 +41,7 @@ func GetEdgePoints(img *image.NRGBA, threshold int)[]point {
 				sum /= total
 			}
 			if sum > threshold {
-				points = append(points, point{x: x, y: y})
+				points = append(points, Point{x: x, y: y})
 			}
 		}
 	}
@@ -52,8 +49,8 @@ func GetEdgePoints(img *image.NRGBA, threshold int)[]point {
 	tlen := ilen
 	limit := int(float64(ilen) * POINT_RATE)
 
-	if limit > POINT_MAX_NUM {
-		limit = POINT_MAX_NUM
+	if limit > maxPoints {
+		limit = maxPoints
 	}
 
 	for i := 0; i < limit && i < ilen; i++ {
