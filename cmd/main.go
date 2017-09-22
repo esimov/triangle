@@ -14,22 +14,31 @@ import (
 	"flag"
 )
 
+const (
+	WITHOUT_WIREFRAME = iota
+	WITH_WIREFRAME
+	WIREFRAME_ONLY
+)
+
+var (
+	// Flags
+	source		= flag.String("in", "", "Source")
+	destination	= flag.String("out", "", "Destination")
+	blurRadius	= flag.Int("blur", 4, "Blur radius")
+	sobelThreshold	= flag.Int("sobel", 10, "Sobel filter threshold")
+	pointsThreshold	= flag.Int("points", 20, "Points threshold")
+	maxPoints	= flag.Int("max", 2500, "Maximum number of points")
+	wireframe	= flag.Int("wireframe", 0, "Wireframe mode")
+	lineWidth	= flag.Float64("width", 1, "Wireframe line width")
+	isSolid		= flag.Bool("solid", false, "Solid line color")
+
+	blur, gray, sobel *image.NRGBA
+	triangles 	[]tri.Triangle
+	points 		[]tri.Point
+	lineColor	color.RGBA
+)
+
 func main() {
-	var (
-		// Flags
-		source		= flag.String("in", "", "Source")
-		destination	= flag.String("out", "", "Destination")
-		blurRadius	= flag.Int("blur", 4, "Blur radius")
-		sobelThreshold	= flag.Int("sobel", 10, "Sobel filter threshold")
-		pointsThreshold	= flag.Int("points", 20, "Points threshold")
-		maxPoints	= flag.Int("max", 2500, "Maximum number of points")
-		wireframe	= flag.Bool("wireframe", false, "Wireframe mode")
-
-		blur, gray, sobel *image.NRGBA
-		triangles 	[]tri.Triangle
-		points 		[]tri.Point
-	)
-
 	flag.Parse()
 
 	file, err := os.Open(*source)
@@ -75,16 +84,30 @@ func main() {
 		j := ((int(cx) | 0) + (int(cy) | 0) * width) * 4
 		r, g, b := img.Pix[j], img.Pix[j + 1], img.Pix[j + 2]
 
-		ctx.SetLineWidth(2)
-		ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
-		ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
+		if *isSolid {
+			lineColor = color.RGBA{R:0, G:0, B:0, A:255}
+		} else {
+			lineColor = color.RGBA{R:r, G:g, B:b, A:255}
+		}
 
-		if !*wireframe {
-			ctx.StrokePreserve()
+		switch *wireframe {
+		case WITHOUT_WIREFRAME:
+			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
 			ctx.FillPreserve()
 			ctx.Fill()
+		case WITH_WIREFRAME:
+			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
+			ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R:0, G:0, B:0, A:20}))
+			ctx.SetLineWidth(*lineWidth)
+			ctx.FillPreserve()
+			ctx.StrokePreserve()
+			ctx.Stroke()
+		case WIREFRAME_ONLY:
+			ctx.SetStrokeStyle(gg.NewSolidPattern(lineColor))
+			ctx.SetLineWidth(*lineWidth)
+			ctx.StrokePreserve()
+			ctx.Stroke()
 		}
-		ctx.Stroke()
 		ctx.Pop()
 	}
 
@@ -174,7 +197,7 @@ func toNRGBA(img image.Image) *image.NRGBA {
 func spinner(message string) {
 	go func() {
 		for {
-			for _, r := range `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` {
+			for _, r := range `-\|/` {
 				fmt.Printf("\r%s%s %c%s", message, "\x1b[92m", r, "\x1b[39m")
 				time.Sleep(time.Millisecond * 100)
 			}
