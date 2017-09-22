@@ -1,13 +1,13 @@
 # ▲ Triangle
-Triangle is a tool to create image arts using the [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) technique. It takes an image as input and it converts to abstract image composed from tiles of triangles.
+Triangle is a tool to create image arts using the [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) technique. It takes an image as input and it converts to abstract image composed of tiles of triangles.
 
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
 
 ### The technique
-* First the image is blured out to smothen the sharp pixel edges. The more blured is an image the generated output will be more diffused. 
+* First the image is blured out to smothen the sharp pixel edges. The more blured an image is the more diffused the generated output will be.
 * Second the resulted image is converted to grayscale mode. 
 * Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulting image.
-* We apply the delaunay algorithm using the obtained pixels.
+* Lastly we apply the delaunay algorithm on the pixels obtained from the previous step.
 
 ```go
 blur = tri.Stackblur(img, uint32(width), uint32(height), uint32(*blurRadius))
@@ -21,16 +21,13 @@ triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 ```bash
 $ go get github.com/esimov/triangle/cmd/triangle
 $ go install
-
-# Start the application
-$ triangle --help
 ```
 ### Supported commands
 
 ```bash
 $ triangle --help
 ```
-Supported command flags:
+The following flags are supported:
 
 | Flag | Default | Description |
 | --- | --- | --- |
@@ -44,7 +41,7 @@ Supported command flags:
 | `wireframe` | 0 | Wireframe mode (without|with|both) |
 | `width` | 1 | Wireframe line width |
 
-The less the maximum number of points are, the resulted art image will be more like a cubic painting.
+Setting a lower points value, the resulted image will be more like a cubic painting.
 
 Here are some examples you can experiment with:
 ```bash
