@@ -37,8 +37,8 @@ The following flags are supported:
 | `max` | 2500 | Maximum number of points |
 | `points` | 20 | Points threshold |
 | `sobel` | 10 | Sobel filter threshold |
-| `solid` | flase | Solid line color |
-| `wireframe` | 0 | Wireframe mode (without|with|both) |
+| `solid` | false | Solid line color |
+| `wireframe` | 0 | Wireframe mode (without,with,both) |
 | `width` | 1 | Wireframe line width |
 
 Setting a lower points value, the resulted image will be more like a cubic painting.
