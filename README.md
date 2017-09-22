@@ -7,7 +7,7 @@ Triangle is a tool to create image arts using the [delaunay triangulation](https
 * First the image is blured out to smothen the sharp pixel edges. The more blured is an image the generated output will be more diffused. 
 * Second the resulted image is converted to grayscale mode. 
 * Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulting image.
-* We apply the delaunay algorithm using the obtained representative image pixels.
+* We apply the delaunay algorithm using the obtained pixels.
 
 ```go
 blur = tri.Stackblur(img, uint32(width), uint32(height), uint32(*blurRadius))
