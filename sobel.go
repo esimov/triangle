@@ -21,6 +21,8 @@ var (
 	}
 )
 
+// Detect image edges.
+// See https://en.wikipedia.org/wiki/Sobel_operator
 func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	var sumX, sumY int32
 	dx, dy := img.Bounds().Max.X, img.Bounds().Max.Y

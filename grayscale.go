@@ -5,6 +5,7 @@ import (
 	"image/color"
 )
 
+// Convert image to grayscale.
 func Grayscale(src *image.NRGBA) *image.NRGBA {
 	dx, dy := src.Bounds().Max.X, src.Bounds().Max.Y
 	dst := image.NewNRGBA(src.Bounds())

@@ -16,6 +16,7 @@ func newNode(x, y int) Node {
 	return Node{x, y}
 }
 
+// Check if two nodes are approximately equals.
 func (n Node) isEq(p Node) bool {
 	dx := n.X - p.X
 	dy := n.Y - p.Y
@@ -36,11 +37,13 @@ type edge struct {
 	nodes []Node
 }
 
+// Create a new edge.
 func newEdge(p0, p1 Node) []Node {
 	nodes := []Node{p0, p1}
 	return nodes
 }
 
+// Check if two edges are approximately equals.
 func (e edge) isEq(edge edge) bool {
 	na := e.nodes
 	nb := edge.nodes
@@ -62,10 +65,13 @@ type Triangle struct {
 
 var t Triangle = Triangle{}
 
+// Create a new triangle which circumcircle encloses the point to be added.
 func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	t.Nodes = []Node{p0, p1, p2}
 	t.edges = []edge{edge{newEdge(p0, p1)}, edge{newEdge(p1, p2)}, edge{newEdge(p2, p0)}}
 
+	// Create a circumscribed circle of this triangle.
+	// The circumcircle of a triangle is the circle which has the three vertices of the triangle lying on its circumference.
 	circle := t.circle
 	ax, ay := p1.X - p0.X, p1.Y - p0.Y
 	bx, by := p2.X - p0.X, p2.Y - p0.Y
@@ -77,9 +83,11 @@ func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	circle.x = int(float64((p2.Y - p0.Y) * m + (p0.Y - p1.Y) * u) * s)
 	circle.y = int(float64((p0.X - p2.X) * m + (p1.X - p0.X) * u) * s)
 
+	// Calculate the distance between the node points and the triangle circumcircle.
 	dx := p0.X - circle.x
 	dy := p0.Y - circle.y
 
+	// Calculate the circle radius.
 	circle.radius = dx * dx + dy * dy
 	t.circle = circle
 
@@ -102,16 +110,19 @@ func (d *Delaunay) Init(width, height int) *Delaunay {
 	return d
 }
 
+// Clear the delaunay triangles slice.
 func (d *Delaunay) clear() {
 	p0 := newNode(0, 0)
 	p1 := newNode(d.width, 0)
 	p2 := newNode(d.width, d.height)
 	p3 := newNode(0, d.height)
 
-	// Create the supertriangle
+	// Create the supertriangle, an artificial triangle which encompasses all the points.
+	// At the end of the triangulation process any triangles which share edges with the supertriangle are deleted from the triangle list.
 	d.triangles = []Triangle{t.newTriangle(p0, p1, p2), t.newTriangle(p0, p2, p3)}
 }
 
+// Insert new triangles into the delaunay triangles slice.
 func (d *Delaunay) Insert(points []Point) *Delaunay {
 	var (
 		i, j, k int
@@ -132,30 +143,35 @@ func (d *Delaunay) Insert(points []Point) *Delaunay {
 		for i = 0; i < len(d.triangles); i++ {
 			t := triangles[i]
 
+			//Check whether the points are inside the triangle circumcircle.
 			circle := t.circle
 			dx = circle.x - x
 			dy = circle.y - y
 			distSq = dx * dx + dy * dy
 
 			if distSq < circle.radius {
+				// Save triangle edges in case they are included.
 				edges = append(edges, t.edges[0], t.edges[1], t.edges[2])
 			} else {
+				// If not included carry over.
 				temps = append(temps, t)
 			}
 		}
 
 		polygon = nil
+		// Check duplication of edges, delete if duplicates.
 		edgesLoop:
 		for i = 0; i < len(edges); i++ {
 			edge := edges[i]
 			for j = 0; j < len(polygon); j++ {
+				// Remove identical edges.
 				if edge.isEq(polygon[j]) {
-					// Remove polygon from the polygon slice
+					// Remove polygon from the polygon slice.
 					polygon = append(polygon[:j], polygon[j+1:]...)
 					continue edgesLoop
 				}
 			}
-			// Insert new edge into the polygon slice
+			// Insert new edge into the polygon slice.
 			polygon = append(polygon, edge)
 
 		}
@@ -168,6 +184,7 @@ func (d *Delaunay) Insert(points []Point) *Delaunay {
 	return d
 }
 
+// Get the generated triangles.
 func (d *Delaunay) GetTriangles() []Triangle {
 	return d.triangles
 }

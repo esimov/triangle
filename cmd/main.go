@@ -116,8 +116,8 @@ func main() {
 	}
 
 	end := time.Since(start)
-	fmt.Printf("\nGenerated in: %.2fs\n", end.Seconds())
-	fmt.Printf("Total number of %d triangles generated out of %d points\n", len(triangles), len(points))
+	fmt.Printf("\nGenerated in: \x1b[92m%.2fs\n", end.Seconds())
+	fmt.Printf("\x1b[39mTotal number of \x1b[92m%d \x1b[39mtriangles generated out of \x1b[92m%d \x1b[39mpoints\n", len(triangles), len(points))
 }
 
 // toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
