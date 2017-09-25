@@ -1,4 +1,4 @@
-package triangulator
+package triangle
 
 type Point struct {
 	x, y int

@@ -1,7 +1,7 @@
 // Go implementation of StackBlur algorithm described here:
 // http://incubator.quasimondo.com/processing/fast_blur_deluxe.php
 
-package triangulator
+package triangle
 
 import (
 	"image"

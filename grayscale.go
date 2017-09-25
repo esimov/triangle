@@ -1,4 +1,4 @@
-package triangulator
+package triangle
 
 import (
 	"image"

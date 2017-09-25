@@ -35,6 +35,7 @@ The following flags are supported:
 | `out` | n/a | Output file |
 | `blur` | 4 | Blur radius |
 | `max` | 2500 | Maximum number of points |
+| `noise` | 0 | Noise factor |
 | `points` | 20 | Points threshold |
 | `sobel` | 10 | Sobel filter threshold |
 | `solid` | false | Solid line color |
@@ -42,6 +43,8 @@ The following flags are supported:
 | `width` | 1 | Wireframe line width |
 
 Setting a lower points value, the resulted image will be more like a cubic painting.
+
+You can even add a noise factor, giving a more artistic, despeckle like result for the final image.  
 
 Here are some examples you can experiment with:
 ```bash

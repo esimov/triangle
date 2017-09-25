@@ -12,6 +12,7 @@ import (
 	tri "github.com/esimov/triangle"
 	"github.com/fogleman/gg"
 	"flag"
+	"image/png"
 )
 
 const (
@@ -29,6 +30,7 @@ var (
 	pointsThreshold	= flag.Int("points", 20, "Points threshold")
 	maxPoints	= flag.Int("max", 2500, "Maximum number of points")
 	wireframe	= flag.Int("wireframe", 0, "Wireframe mode")
+	noise		= flag.Int("noise", 0, "Noise factor")
 	lineWidth	= flag.Float64("width", 1, "Wireframe line width")
 	isSolid		= flag.Bool("solid", false, "Solid line color")
 
@@ -111,8 +113,23 @@ func main() {
 		ctx.Pop()
 	}
 
-	if err = ctx.SavePNG(*destination); err != nil {
+	fq, err := os.Create(*destination)
+	if err != nil {
 		log.Fatal(err)
+	}
+	defer fq.Close()
+
+	newimg := ctx.Image()
+	// Apply a noise on the final image. This will give a more artistic look.
+	if *noise > 0 {
+		noisyImg := tri.Noise(*noise, newimg, newimg.Bounds().Dx(), newimg.Bounds().Dy())
+		if err = png.Encode(fq, noisyImg); err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		if err = png.Encode(fq, newimg); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	end := time.Since(start)
