@@ -14,8 +14,8 @@ type prng struct {
 }
 
 // Apply a noise factor, like adobe's grain filter
-func Noise (amount int, pxl image.Image, w, h int) *image.NRGBA {
-	noiseImg := image.NewNRGBA(image.Rect(0, 0, w, h))
+func Noise (amount int, pxl image.Image, w, h int) *image.NRGBA64 {
+	noiseImg := image.NewNRGBA64(image.Rect(0, 0, w, h))
 	prng := &prng{
 		a: 16807,
 		m: 0x7fffffff,
@@ -24,7 +24,7 @@ func Noise (amount int, pxl image.Image, w, h int) *image.NRGBA {
 	}
 	for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
-			noise := (prng.randomSeed() - 0.1) * float64(amount)
+			noise := (prng.randomSeed() - 0.01) * float64(amount)
 			r, g, b, a := pxl.At(x, y).RGBA()
 			rf, gf, bf := float64(r>>8), float64(g>>8), float64(b>>8)
 			// Check if color do not overflow the maximum limit after noise has been applied

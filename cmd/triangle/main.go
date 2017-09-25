@@ -120,7 +120,7 @@ func main() {
 	defer fq.Close()
 
 	newimg := ctx.Image()
-	// Apply a noise on the final image. This will give a more artistic look.
+	// Apply a noise on the final image. This will give it a more artistic look.
 	if *noise > 0 {
 		noisyImg := tri.Noise(*noise, newimg, newimg.Bounds().Dx(), newimg.Bounds().Dy())
 		if err = png.Encode(fq, noisyImg); err != nil {

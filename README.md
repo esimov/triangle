@@ -42,9 +42,7 @@ The following flags are supported:
 | `wireframe` | 0 | Wireframe mode (without,with,both) |
 | `width` | 1 | Wireframe line width |
 
-Setting a lower points value, the resulted image will be more like a cubic painting.
-
-You can even add a noise factor, giving a more artistic, despeckle like result for the final image.  
+Setting a lower points value, the resulted image will be more like a cubic painting. You can even add a noise factor, giving a more artistic, despeckle like result for the final image.  
 
 Here are some examples you can experiment with:
 ```bash
