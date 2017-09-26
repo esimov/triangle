@@ -16,8 +16,8 @@ var (
 
 	kernelY kernel = kernel{
 		{-1, -2, -1},
-		{ 0,  0,  0},
-		{ 1,  2,  1},
+		{0, 0, 0},
+		{1, 2, 1},
 	}
 )
 
@@ -28,7 +28,7 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	dx, dy := img.Bounds().Max.X, img.Bounds().Max.Y
 
 	// Get 3x3 window of pixels because image data given is just a 1D array of pixels
-	maxPixelOffset := dx * 2 + len(kernelX) - 1
+	maxPixelOffset := dx*2 + len(kernelX) - 1
 
 	data := getImageData(img)
 	length := len(data) - maxPixelOffset
@@ -39,7 +39,7 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 		sumX, sumY = 0, 0
 		for x := 0; x < len(kernelX); x++ {
 			for y := 0; y < len(kernelY); y++ {
-				px := data[i + (dx * y) + x]
+				px := data[i+(dx*y)+x]
 				if len(px) > 0 {
 					r := px[0]
 					// We are using px[0] (i.e. R value) because the image is grayscale anyway
@@ -70,31 +70,31 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	// Apply the kernel values.
 	for i := 0; i < dataLength; i++ {
 		edges[i] = 0
-		if i % 4 != 0 {
-			m := magnitudes[i / 4]
+		if i%4 != 0 {
+			m := magnitudes[i/4]
 			if m != 0 {
-				edges[i - 1] = m
+				edges[i-1] = m
 			}
 		}
 	}
 
 	// Generate the new image with the sobel filter applied.
 	for idx := 0; idx < len(edges); idx += 4 {
-		img.Pix[idx] 	= uint8(edges[idx])
-		img.Pix[idx+1] 	= uint8(edges[idx+1])
-		img.Pix[idx+2] 	= uint8(edges[idx+2])
-		img.Pix[idx+3] 	= 255
+		img.Pix[idx] = uint8(edges[idx])
+		img.Pix[idx+1] = uint8(edges[idx+1])
+		img.Pix[idx+2] = uint8(edges[idx+2])
+		img.Pix[idx+3] = 255
 	}
 	return img
 }
 
 // Group pixels into 2D array, each one containing the pixel RGB value.
-func getImageData(img *image.NRGBA)[][]uint8 {
+func getImageData(img *image.NRGBA) [][]uint8 {
 	dx, dy := img.Bounds().Max.X, img.Bounds().Max.Y
-	pixels := make([][]uint8, dx*dy * 4)
+	pixels := make([][]uint8, dx*dy*4)
 
 	for i := 0; i < len(pixels); i += 4 {
-		pixels[i / 4] = []uint8{
+		pixels[i/4] = []uint8{
 			img.Pix[i],
 			img.Pix[i+1],
 			img.Pix[i+2],

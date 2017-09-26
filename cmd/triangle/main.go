@@ -1,18 +1,19 @@
 package main
 
 import (
-	_ "image/png"
-	_ "image/jpeg"
-	"os"
+	"flag"
+	"fmt"
 	"image"
 	"image/color"
+	_ "image/jpeg"
+	"image/png"
+	_ "image/png"
 	"log"
+	"os"
 	"time"
-	"fmt"
+
 	tri "github.com/esimov/triangle"
 	"github.com/fogleman/gg"
-	"flag"
-	"image/png"
 )
 
 const (
@@ -23,21 +24,21 @@ const (
 
 var (
 	// Flags
-	source		= flag.String("in", "", "Source")
-	destination	= flag.String("out", "", "Destination")
-	blurRadius	= flag.Int("blur", 4, "Blur radius")
-	sobelThreshold	= flag.Int("sobel", 10, "Sobel filter threshold")
-	pointsThreshold	= flag.Int("points", 20, "Points threshold")
-	maxPoints	= flag.Int("max", 2500, "Maximum number of points")
-	wireframe	= flag.Int("wireframe", 0, "Wireframe mode")
-	noise		= flag.Int("noise", 0, "Noise factor")
-	lineWidth	= flag.Float64("width", 1, "Wireframe line width")
-	isSolid		= flag.Bool("solid", false, "Solid line color")
+	source          = flag.String("in", "", "Source")
+	destination     = flag.String("out", "", "Destination")
+	blurRadius      = flag.Int("blur", 4, "Blur radius")
+	sobelThreshold  = flag.Int("sobel", 10, "Sobel filter threshold")
+	pointsThreshold = flag.Int("points", 20, "Points threshold")
+	maxPoints       = flag.Int("max", 2500, "Maximum number of points")
+	wireframe       = flag.Int("wireframe", 0, "Wireframe mode")
+	noise           = flag.Int("noise", 0, "Noise factor")
+	lineWidth       = flag.Float64("width", 1, "Wireframe line width")
+	isSolid         = flag.Bool("solid", false, "Solid line color")
 
 	blur, gray, sobel *image.NRGBA
-	triangles 	[]tri.Triangle
-	points 		[]tri.Point
-	lineColor	color.RGBA
+	triangles         []tri.Triangle
+	points            []tri.Point
+	lineColor         color.RGBA
 )
 
 func main() {
@@ -80,26 +81,26 @@ func main() {
 		ctx.LineTo(float64(p2.X), float64(p2.Y))
 		ctx.LineTo(float64(p0.X), float64(p0.Y))
 
-		cx := float64(p0.X + p1.X + p2.X) * 0.33333
-		cy := float64(p0.Y + p1.Y + p2.Y) * 0.33333
+		cx := float64(p0.X+p1.X+p2.X) * 0.33333
+		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx) | 0) + (int(cy) | 0) * width) * 4
-		r, g, b := img.Pix[j], img.Pix[j + 1], img.Pix[j + 2]
+		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
+		r, g, b := img.Pix[j], img.Pix[j+1], img.Pix[j+2]
 
 		if *isSolid {
-			lineColor = color.RGBA{R:0, G:0, B:0, A:255}
+			lineColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
 		} else {
-			lineColor = color.RGBA{R:r, G:g, B:b, A:255}
+			lineColor = color.RGBA{R: r, G: g, B: b, A: 255}
 		}
 
 		switch *wireframe {
 		case WITHOUT_WIREFRAME:
-			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
+			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
 			ctx.FillPreserve()
 			ctx.Fill()
 		case WITH_WIREFRAME:
-			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R:r, G:g, B:b, A:255}))
-			ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R:0, G:0, B:0, A:20}))
+			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
+			ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R: 0, G: 0, B: 0, A: 20}))
 			ctx.SetLineWidth(*lineWidth)
 			ctx.FillPreserve()
 			ctx.StrokePreserve()
