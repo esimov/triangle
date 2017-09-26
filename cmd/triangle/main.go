@@ -14,6 +14,7 @@ import (
 
 	tri "github.com/esimov/triangle"
 	"github.com/fogleman/gg"
+	"github.com/mattn/go-colorable"
 )
 
 const (
@@ -39,6 +40,7 @@ var (
 	triangles         []tri.Triangle
 	points            []tri.Point
 	lineColor         color.RGBA
+	out               = colorable.NewColorableStdout()
 )
 
 func main() {
@@ -134,8 +136,8 @@ func main() {
 	}
 
 	end := time.Since(start)
-	fmt.Printf("\nGenerated in: \x1b[92m%.2fs\n", end.Seconds())
-	fmt.Printf("\x1b[39mTotal number of \x1b[92m%d \x1b[39mtriangles generated out of \x1b[92m%d \x1b[39mpoints\n", len(triangles), len(points))
+	fmt.Fprintf(out, "\nGenerated in: \x1b[92m%.2fs\n", end.Seconds())
+	fmt.Fprintf(out, "\x1b[39mTotal number of \x1b[92m%d \x1b[39mtriangles generated out of \x1b[92m%d \x1b[39mpoints\n", len(triangles), len(points))
 }
 
 // toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
@@ -216,7 +218,7 @@ func spinner(message string) {
 	go func() {
 		for {
 			for _, r := range `-\|/` {
-				fmt.Printf("\r%s%s %c%s", message, "\x1b[92m", r, "\x1b[39m")
+				fmt.Fprintf(out, "\r%s%s %c%s", message, "\x1b[92m", r, "\x1b[39m")
 				time.Sleep(time.Millisecond * 100)
 			}
 		}
