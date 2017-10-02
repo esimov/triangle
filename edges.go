@@ -9,15 +9,15 @@ import (
 const POINT_RATE = 0.875
 
 // Get the edge points after the Sobel filter has been applied.
-func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int)[]Point {
+func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int) []Point {
 	rand.Seed(time.Now().UTC().UnixNano())
 	width, height := img.Bounds().Max.X, img.Bounds().Max.Y
 
 	var (
-		points []Point
-		sum, total int
+		points                       []Point
+		sum, total                   int
 		x, y, row, col, sx, sy, step int
-		dpoints []Point
+		dpoints                      []Point
 	)
 
 	for y = 0; y < height; y++ {
@@ -32,7 +32,7 @@ func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int)[]Point {
 					for col = -1; col <= 1; col++ {
 						sx = x + col
 						if sx >= 0 && sx < width {
-							sum += int(img.Pix[(sx + step) * 4])
+							sum += int(img.Pix[(sx+step)*4])
 							total++
 						}
 					}
