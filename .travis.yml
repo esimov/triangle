@@ -16,3 +16,8 @@ env:
 
 script:
   - go get -u -t ./...
+
+notifications:
+  email:
+    on_success: never
+    on_failure: never
