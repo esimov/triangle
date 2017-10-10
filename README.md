@@ -41,8 +41,11 @@ The following flags are supported:
 | `solid` | false | Solid line color |
 | `wireframe` | 0 | Wireframe mode (without,with,both) |
 | `width` | 1 | Wireframe line width |
+| `gray` | false | Convert to grayscale |
 
 Setting a lower points value, the resulted image will be more like a cubic painting. You can even add a noise factor, giving a more artistic, despeckle like result for the final image.  
+
+In case the `gray` filter is set as `true` the resulting triangulated image will be converted to grayscale mode.
 
 Here are some examples you can experiment with:
 ```bash
