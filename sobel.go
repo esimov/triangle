@@ -26,6 +26,7 @@ var (
 func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	var sumX, sumY int32
 	dx, dy := img.Bounds().Max.X, img.Bounds().Max.Y
+	dst := image.NewNRGBA(img.Bounds())
 
 	// Get 3x3 window of pixels because image data given is just a 1D array of pixels
 	maxPixelOffset := dx * 2 + len(kernelX) - 1
@@ -80,12 +81,12 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 
 	// Generate the new image with the sobel filter applied.
 	for idx := 0; idx < len(edges); idx += 4 {
-		img.Pix[idx] 	= uint8(edges[idx])
-		img.Pix[idx+1] 	= uint8(edges[idx+1])
-		img.Pix[idx+2] 	= uint8(edges[idx+2])
-		img.Pix[idx+3] 	= 255
+		dst.Pix[idx] 	= uint8(edges[idx])
+		dst.Pix[idx+1] 	= uint8(edges[idx+1])
+		dst.Pix[idx+2] 	= uint8(edges[idx+2])
+		dst.Pix[idx+3] 	= 255
 	}
-	return img
+	return dst
 }
 
 // Group pixels into 2D array, each one containing the pixel RGB value.

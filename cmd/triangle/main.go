@@ -33,8 +33,9 @@ var (
 	noise		= flag.Int("noise", 0, "Noise factor")
 	lineWidth	= flag.Float64("width", 1, "Wireframe line width")
 	isSolid		= flag.Bool("solid", false, "Solid line color")
+	grayscale	= flag.Bool("gray", false, "Convert to grayscale")
 
-	blur, gray, sobel *image.NRGBA
+	blur, gray, sobel, srcImg *image.NRGBA
 	triangles 	[]tri.Triangle
 	points 		[]tri.Point
 	lineColor	color.RGBA
@@ -67,8 +68,13 @@ func main() {
 	gray = tri.Grayscale(blur)
 	sobel = tri.SobelFilter(gray, float64(*sobelThreshold))
 	points = tri.GetEdgePoints(sobel, *pointsThreshold, *maxPoints)
-
 	triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
+
+	if *grayscale {
+		srcImg = gray
+	} else {
+		srcImg = img
+	}
 
 	for i := 0; i < len(triangles); i++ {
 		t := triangles[i]
@@ -84,7 +90,7 @@ func main() {
 		cy := float64(p0.Y + p1.Y + p2.Y) * 0.33333
 
 		j := ((int(cx) | 0) + (int(cy) | 0) * width) * 4
-		r, g, b := img.Pix[j], img.Pix[j + 1], img.Pix[j + 2]
+		r, g, b := srcImg.Pix[j], srcImg.Pix[j + 1], srcImg.Pix[j + 2]
 
 		if *isSolid {
 			lineColor = color.RGBA{R:0, G:0, B:0, A:255}
