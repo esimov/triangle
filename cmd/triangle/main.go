@@ -13,6 +13,12 @@ import (
 	"github.com/fogleman/gg"
 	"flag"
 	"image/png"
+	"io"
+	"io/ioutil"
+	"path/filepath"
+	"sync"
+	"runtime"
+	"strings"
 )
 
 const (
@@ -41,15 +47,105 @@ var (
 	lineColor	color.RGBA
 )
 
+var ch chan string = make(chan string)
+
+func init() {
+	numcpu := runtime.NumCPU()
+	runtime.GOMAXPROCS(numcpu) // Try to use all available CPUs.
+}
+
 func main() {
+	var wg sync.WaitGroup
+
 	flag.Parse()
 
-	file, err := os.Open(*source)
-	defer file.Close()
+	fs, err := os.Stat(*source)
+	if err != nil {
+		log.Fatal(err)
+	}
+	switch mode := fs.Mode(); {
+	case mode.IsDir():
+		// Supported image files.
+		extensions := []string{".jpg", ".png"}
+		dir, err := filepath.Abs(filepath.Base(*source))
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		// Read source directory.
+		files, err := ioutil.ReadDir(*source)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Read destination file or directory.
+		dst, err := os.Stat(*destination)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Check if the image destination is a directory or a file.
+		// Abort the process in case of multiple image processing the destination is a file.
+		if dst.Mode().IsRegular() {
+			log.Fatal("Please specify a directory as destination!")
+			os.Exit(2)
+		}
+		output, err := filepath.Abs(filepath.Base(*destination))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Range over all the image files and process them in separate goroutines.
+		for _, f := range files {
+			ext := filepath.Ext(f.Name())
+			for _, iex := range extensions {
+				if ext == iex {
+					// Get the file base name.
+					name := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+					out := output + "/" + name + ".png"
+					// Triangulate each image from the specified folder in separate goroutine.
+					wg.Add(1)
+					go transform(dir + "/" + f.Name(), out, &wg)
+				}
+			}
+		}
+		go func() {
+			for {
+				select {
+				case <-ch:
+					fmt.Println("Done\x1b[92m✓")
+				}
+			}
+		}()
+		wg.Wait()
+	case mode.IsRegular():
+		file, err := os.Open(*source)
+		if err != nil {
+			log.Fatal(err)
+		}
+		process(file, *destination)
+		defer file.Close()
+	}
+}
+
+// Open the file and call the process method. The later will do the heavy job.
+func transform(fn string, output string, wg *sync.WaitGroup) {
+	// Signal the job is done.
+	defer wg.Done()
+	file, err := os.Open(fn)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	process(file, output)
+	// Queue the file name into the channel.
+	ch <- file.Name()
+}
+
+func process(file io.Reader, output string) {
 	src, _, err := image.Decode(file)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	width, height := src.Bounds().Dx(), src.Bounds().Dy()
@@ -119,7 +215,7 @@ func main() {
 		ctx.Pop()
 	}
 
-	fq, err := os.Create(*destination)
+	fq, err := os.Create(output)
 	if err != nil {
 		log.Fatal(err)
 	}
