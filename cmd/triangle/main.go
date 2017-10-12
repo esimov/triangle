@@ -47,7 +47,10 @@ var (
 	lineColor	color.RGBA
 )
 
-var ch chan string = make(chan string)
+var (
+	ch chan string = make(chan string)
+	mu sync.Mutex
+)
 
 func init() {
 	numcpu := runtime.NumCPU()
@@ -67,10 +70,6 @@ func main() {
 	case mode.IsDir():
 		// Supported image files.
 		extensions := []string{".jpg", ".png"}
-		dir, err := filepath.Abs(filepath.Base(*source))
-		if err != nil {
-			log.Fatal(err)
-		}
 
 		// Read source directory.
 		files, err := ioutil.ReadDir(*source)
@@ -102,7 +101,12 @@ func main() {
 				if ext == iex {
 					// Get the file base name.
 					name := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+					dir, err := filepath.Abs(filepath.Base(*source))
+					if err != nil {
+						log.Fatal(err)
+					}
 					out := output + "/" + name + ".png"
+
 					// Triangulate each image from the specified folder in separate goroutine.
 					wg.Add(1)
 					go transform(dir + "/" + f.Name(), out, &wg)
@@ -113,7 +117,7 @@ func main() {
 			for {
 				select {
 				case <-ch:
-					fmt.Println("Done\x1b[92m✓")
+					fmt.Println("Conversion done \x1b[92m✓\n")
 				}
 			}
 		}()
@@ -142,7 +146,11 @@ func transform(fn string, output string, wg *sync.WaitGroup) {
 	ch <- file.Name()
 }
 
+// Triangulate the source image
 func process(file io.Reader, output string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	src, _, err := image.Decode(file)
 	if err != nil {
 		log.Fatal(err)
