@@ -19,6 +19,7 @@ import (
 	"sync"
 	"runtime"
 	"strings"
+	"path"
 )
 
 const (
@@ -46,11 +47,7 @@ var (
 	points 		[]tri.Point
 	lineColor	color.RGBA
 )
-
-var (
-	ch chan string = make(chan string)
-	mu sync.Mutex
-)
+var mu sync.Mutex
 
 func init() {
 	numcpu := runtime.NumCPU()
@@ -59,8 +56,12 @@ func init() {
 
 func main() {
 	var wg sync.WaitGroup
-
 	flag.Parse()
+
+	type item struct {
+		img	*os.File
+		err	error
+	}
 
 	fs, err := os.Stat(*source)
 	if err != nil {
@@ -94,66 +95,77 @@ func main() {
 			log.Fatal(err)
 		}
 
-		// Range over all the image files and process them in separate goroutines.
+		// Range over all the image files and save them into a slice.
+		images := []string{}
 		for _, f := range files {
 			ext := filepath.Ext(f.Name())
 			for _, iex := range extensions {
 				if ext == iex {
-					// Get the file base name.
-					name := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
-					dir, err := filepath.Abs(filepath.Base(*source))
-					if err != nil {
-						log.Fatal(err)
-					}
-					out := output + "/" + name + ".png"
-
-					// Triangulate each image from the specified folder in separate goroutine.
-					wg.Add(1)
-					go transform(dir + "/" + f.Name(), out, &wg)
+					images = append(images, f.Name())
 				}
 			}
 		}
-		go func() {
-			for {
-				select {
-				case <-ch:
-					fmt.Println("Conversion done \x1b[92m✓\n")
-				}
+
+		// Process the image items in separate goroutines.
+		ch := make(chan item, len(images))
+		for _, img := range images {
+			// Get the file base name.
+			name := strings.TrimSuffix(img, filepath.Ext(img))
+			dir, err := filepath.Abs(filepath.Base(*source))
+			if err != nil {
+				log.Fatal(err)
 			}
+			out := output + "/" + name + ".png"
+			// Triangulate each image from the specified folder in separate goroutine.
+			wg.Add(1)
+			go func(in, out string) {
+				// Signal the job is done.
+				defer wg.Done()
+				file, err := os.Open(in)
+
+				if err != nil {
+					log.Fatal(err)
+				}
+				output, err := process(file, out)
+				// Send the processing item to the channel.
+				ch <- item{output, err}
+			}(dir + "/" + img, out)
+		}
+
+		// closer
+		go func() {
+			wg.Wait()
+			close(ch)
 		}()
-		wg.Wait()
+
+		// Drain the channel.
+		for f := range ch {
+			if f.err != nil {
+				fmt.Printf("Error converting image: %s ", f.img.Name())
+			} else {
+				fmt.Printf("Saved as: %s \x1b[92m✓\n\n", path.Base(f.img.Name()))
+			}
+		}
 	case mode.IsRegular():
 		file, err := os.Open(*source)
 		if err != nil {
 			log.Fatal(err)
 		}
 		process(file, *destination)
+		fmt.Printf("Saved as: %s \x1b[92m✓\n\n", path.Base(*destination))
+		
 		defer file.Close()
 	}
 }
 
-// Open the file and call the process method. The later will do the heavy job.
-func transform(fn string, output string, wg *sync.WaitGroup) {
-	// Signal the job is done.
-	defer wg.Done()
-	file, err := os.Open(fn)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	process(file, output)
-	// Queue the file name into the channel.
-	ch <- file.Name()
-}
-
 // Triangulate the source image
-func process(file io.Reader, output string) {
+func process(file io.Reader, output string) (*os.File, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	src, _, err := image.Decode(file)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	width, height := src.Bounds().Dx(), src.Bounds().Dy()
@@ -225,7 +237,7 @@ func process(file io.Reader, output string) {
 
 	fq, err := os.Create(output)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer fq.Close()
 
@@ -234,17 +246,19 @@ func process(file io.Reader, output string) {
 	if *noise > 0 {
 		noisyImg := tri.Noise(*noise, newimg, newimg.Bounds().Dx(), newimg.Bounds().Dy())
 		if err = png.Encode(fq, noisyImg); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 	} else {
 		if err = png.Encode(fq, newimg); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 	}
 
 	end := time.Since(start)
 	fmt.Printf("\nGenerated in: \x1b[92m%.2fs\n", end.Seconds())
 	fmt.Printf("\x1b[39mTotal number of \x1b[92m%d \x1b[39mtriangles generated out of \x1b[92m%d \x1b[39mpoints\n", len(triangles), len(points))
+
+	return fq, err
 }
 
 // toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
