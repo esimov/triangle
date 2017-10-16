@@ -52,6 +52,13 @@ Here are some examples you can experiment with:
 $ triangle -in samples/clown_4.jpg -out output.png -wireframe=0 -max=3500 -width=2 -blur=2
 $ triangle -in samples/clown_4.jpg -out output.png -wireframe=2 -max=5500 -width=1 -blur=10
 ```
+
+You can even transform multiple images from a specific folder with one command, concurently, by specifying as `-in` flag the source folder and as `-out` flag the destination folder. Example:
+
+```bash
+$ triangle -in ./samples/ -out ./ouput -wireframe=0 -max=3500 -width=2 -blur=2 -noise=4
+```
+
 Below are some of the generated images:
 
 <a href="https://github.com/esimov/triangle/blob/master/output/sample_3.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_3.png" width=420/></a>
