@@ -1,4 +1,6 @@
-# ▲ Triangle
+
+# ![Triangle logo](https://user-images.githubusercontent.com/883386/32769128-4d9625c6-c923-11e7-9a96-030f2f0efff3.png)
+
 Triangle is a tool to create image arts using the [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) technique. It takes an image as input and it converts to abstract image composed of tiles of triangles.
 
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
