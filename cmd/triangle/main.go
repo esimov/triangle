@@ -134,7 +134,7 @@ func main() {
 				output, err := process(file, out)
 				// Send the processing item to the channel.
 				ch <- item{output, err}
-			}(dir+"/"+img, out)
+			}(dir + "/" + img, out)
 		}
 
 		// closer
@@ -214,7 +214,7 @@ func process(file io.Reader, output string) (*os.File, error) {
 		cx := float64(p0.X+p1.X+p2.X) * 0.33333
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
+		j := ((int(cx) | 0) + (int(cy) | 0) * width) * 4
 		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
 
 		if *isSolid {
