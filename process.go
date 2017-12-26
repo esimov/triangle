@@ -165,20 +165,6 @@ func toNRGBA(img image.Image) *image.NRGBA {
 				di += 4
 			}
 		}
-	case *image.Gray:
-		for dstY := 0; dstY < dstH; dstY++ {
-			di := dst.PixOffset(0, dstY)
-			si := src.PixOffset(srcMinX, srcMinY+dstY)
-			for dstX := 0; dstX < dstW; dstX++ {
-				c := src.Pix[si]
-				dst.Pix[di+0] = c
-				dst.Pix[di+1] = c
-				dst.Pix[di+2] = c
-				dst.Pix[di+3] = 0xff
-				di += 4
-				si += 2
-			}
-		}
 	default:
 		for dstY := 0; dstY < dstH; dstY++ {
 			di := dst.PixOffset(0, dstY)
