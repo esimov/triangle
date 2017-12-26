@@ -38,11 +38,6 @@ func main() {
 		log.Fatal("usage: triangle -in input.jpg -out out.jpg")
 	}
 
-	type item struct {
-		img *os.File
-		err error
-	}
-
 	fs, err := os.Stat(*source)
 	if err != nil {
 		log.Fatalf("unable to open source: %v", err)
