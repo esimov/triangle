@@ -9,7 +9,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	tri "github.com/esimov/triangle"
@@ -29,7 +28,6 @@ var (
 	isSolid         = flag.Bool("solid", false, "Solid line color")
 	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
 )
-var mu sync.Mutex
 
 func main() {
 	flag.Parse()
