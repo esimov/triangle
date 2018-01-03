@@ -33,12 +33,12 @@ func main() {
 	flag.Parse()
 
 	if len(*source) == 0 || len(*destination) == 0 {
-		log.Fatal("usage: triangle -in input.jpg -out out.jpg")
+		log.Fatal("Usage: triangle -in input.jpg -out out.jpg")
 	}
 
 	fs, err := os.Stat(*source)
 	if err != nil {
-		log.Fatalf("unable to open source: %v", err)
+		log.Fatalf("Unable to open source: %v", err)
 	}
 
 	toProcess := make(map[string]string)
@@ -63,13 +63,13 @@ func main() {
 		// Read source directory.
 		files, err := ioutil.ReadDir(*source)
 		if err != nil {
-			log.Fatalf("unable to read dir: %v", err)
+			log.Fatalf("Unable to read dir: %v", err)
 		}
 
 		// Read destination file or directory.
 		dst, err := os.Stat(*destination)
 		if err != nil {
-			log.Fatalf("unable to get dir stats: %v", err)
+			log.Fatalf("Unable to get dir stats: %v", err)
 		}
 
 		// Check if the image destination is a directory or a file.
@@ -80,7 +80,7 @@ func main() {
 		}
 		output, err := filepath.Abs(filepath.Base(*destination))
 		if err != nil {
-			log.Fatalf("unable to get absolute path: %v", err)
+			log.Fatalf("Unable to get absolute path: %v", err)
 		}
 
 		// Range over all the image files and save them into a slice.
@@ -112,7 +112,7 @@ func main() {
 	for in, out := range toProcess {
 		file, err := os.Open(in)
 		if err != nil {
-			log.Fatalf("unable to open source file: %v", err)
+			log.Fatalf("Unable to open source file: %v", err)
 		}
 		defer file.Close()
 
@@ -138,7 +138,7 @@ type spinner struct {
 	stopChan chan struct{}
 }
 
-// Function to visualize the rendering progress
+// Start process
 func (s *spinner) start(message string) {
 	s.stopChan = make(chan struct{}, 1)
 
@@ -157,6 +157,7 @@ func (s *spinner) start(message string) {
 	}()
 }
 
+// End process
 func (s *spinner) stop() {
 	s.stopChan <- struct{}{}
 }
