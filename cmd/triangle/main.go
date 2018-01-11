@@ -73,7 +73,6 @@ func main() {
 		}
 
 		// Check if the image destination is a directory or a file.
-		// Abort the process in case of multiple image processing the destination is a file.
 		if dst.Mode().IsRegular() {
 			log.Fatal("Please specify a directory as destination!")
 			os.Exit(2)
@@ -94,7 +93,7 @@ func main() {
 			}
 		}
 
-		// Process the image items in separate goroutines.
+		// Process images from directory.
 		for _, img := range images {
 			// Get the file base name.
 			name := strings.TrimSuffix(img, filepath.Ext(img))
