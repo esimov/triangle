@@ -129,8 +129,6 @@ func main() {
 		} else {
 			fmt.Printf("\nError converting image: %s: %s", file.Name(), processErr.Error())
 		}
-
-		defer file.Close()
 	}
 }
 
