@@ -77,7 +77,7 @@ func main() {
 			log.Fatal("Please specify a directory as destination!")
 			os.Exit(2)
 		}
-		output, err := filepath.Abs(filepath.Base(*destination))
+		output, err := filepath.Abs(*destination)
 		if err != nil {
 			log.Fatalf("Unable to get absolute path: %v", err)
 		}
