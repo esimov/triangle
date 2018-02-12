@@ -24,6 +24,14 @@ triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 $ go get github.com/esimov/triangle/cmd/triangle
 $ go install
 ```
+## MacOS (Brew) install
+The library can be installed via Homebrew too or by downloading the binary file from the [releases](https://github.com/esimov/triangle/releases) folder.
+
+```bash
+$ brew tap esimov/triangle
+$ brew install triangle
+```
+
 ### Supported commands
 
 ```bash
