@@ -76,7 +76,7 @@ func (im *Image) Process(file io.Reader, output string) ([]Triangle, []Point, er
 	delaunay := &Delaunay{}
 	img := toNRGBA(src)
 
-	blur := Stackblur(img, uint32(width), uint32(height), uint32(im.BlurRadius))
+	blur := StackBlur(img, uint32(im.BlurRadius))
 	gray := Grayscale(blur)
 	sobel := SobelFilter(gray, float64(im.SobelThreshold))
 	points := GetEdgePoints(sobel, im.PointsThreshold, im.MaxPoints)
@@ -193,7 +193,7 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 	delaunay := &Delaunay{}
 	img := toNRGBA(src)
 
-	blur := Stackblur(img, uint32(width), uint32(height), uint32(svg.BlurRadius))
+	blur := StackBlur(img, uint32(svg.BlurRadius))
 	gray := Grayscale(blur)
 	sobel := SobelFilter(gray, float64(svg.SobelThreshold))
 	points := GetEdgePoints(sobel, svg.PointsThreshold, svg.MaxPoints)
