@@ -24,7 +24,7 @@ var (
 	maxPoints       = flag.Int("max", 2500, "Maximum number of points")
 	wireframe       = flag.Int("wireframe", 0, "Wireframe mode")
 	noise           = flag.Int("noise", 0, "Noise factor")
-	lineWidth       = flag.Float64("width", 1, "Wireframe line width")
+	lineWidth       = flag.Float64("linewidth", 1, "Wireframe line width")
 	isSolid         = flag.Bool("solid", false, "Solid line color")
 	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
 	outputToSVG     = flag.Bool("svg", false, "Save to SVG")

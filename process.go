@@ -224,7 +224,7 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 		case WITHOUT_WIREFRAME, WITH_WIREFRAME:
 			fillColor = color.RGBA{R: r, G: g, B: b, A: 255}
 		case WIREFRAME_ONLY:
-			fillColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
+			fillColor = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 		}
 		lines = append(lines, []Line{
 			{
