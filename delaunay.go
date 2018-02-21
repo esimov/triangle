@@ -68,7 +68,7 @@ var t Triangle = Triangle{}
 // Create a new triangle which circumcircle encloses the point to be added.
 func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	t.Nodes = []Node{p0, p1, p2}
-	t.edges = []edge{edge{newEdge(p0, p1)}, edge{newEdge(p1, p2)}, edge{newEdge(p2, p0)}}
+	t.edges = []edge{{newEdge(p0, p1)}, {newEdge(p1, p2)}, {newEdge(p2, p0)}}
 
 	// Create a circumscribed circle of this triangle.
 	// The circumcircle of a triangle is the circle which has the three vertices of the triangle lying on its circumference.

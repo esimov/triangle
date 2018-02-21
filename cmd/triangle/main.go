@@ -27,13 +27,13 @@ var (
 	lineWidth       = flag.Float64("width", 1, "Wireframe line width")
 	isSolid         = flag.Bool("solid", false, "Solid line color")
 	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
-	outputToSVG	= flag.Bool("svg", false, "Save to SVG")
+	outputToSVG     = flag.Bool("svg", false, "Save to SVG")
 )
 
 func main() {
 	var (
-		triangles []triangle.Triangle
-		points []triangle.Point
+		triangles  []triangle.Triangle
+		points     []triangle.Point
 		processErr error
 	)
 	flag.Parse()
@@ -59,7 +59,7 @@ func main() {
 		LineWidth:       *lineWidth,
 		IsSolid:         *isSolid,
 		Grayscale:       *grayscale,
-		OutputToSVG:	*outputToSVG,
+		OutputToSVG:     *outputToSVG,
 	}
 
 	switch mode := fs.Mode(); {
@@ -117,12 +117,12 @@ func main() {
 
 	for in, out := range toProcess {
 		svg := &triangle.SVG{
-			Title: "Delaunay image triangulator",
-			Lines: []triangle.Line{},
-			Description: "Convert images to computer generated art using delaunay triangulation.",
-			StrokeWidth: p.LineWidth,
+			Title:         "Delaunay image triangulator",
+			Lines:         []triangle.Line{},
+			Description:   "Convert images to computer generated art using delaunay triangulation.",
+			StrokeWidth:   p.LineWidth,
 			StrokeLineCap: "round", //butt, round, square
-			Processor: *p,
+			Processor:     *p,
 		}
 
 		img := &triangle.Image{*p}

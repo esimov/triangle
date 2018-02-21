@@ -174,8 +174,8 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 	</svg>`
 
 	var (
-		lines     []Line
-		fillColor color.RGBA
+		lines       []Line
+		fillColor   color.RGBA
 		strokeColor color.RGBA
 	)
 
@@ -211,7 +211,7 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 		cx := float64(p0.X+p1.X+p2.X) * 0.33333
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx)|0) + (int(cy)|0)*width) * 4
+		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
 		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
 
 		if svg.IsSolid {
@@ -227,7 +227,7 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 			fillColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
 		}
 		lines = append(lines, []Line{
-			Line{
+			{
 				Node{p0.X, p0.Y},
 				Node{p1.X, p1.Y},
 				Node{p2.X, p2.Y},
