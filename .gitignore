@@ -1,4 +1,5 @@
 *.png
 *.jpg
+*.svg
 !output/*
 packages/
