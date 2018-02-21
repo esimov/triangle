@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	tri "github.com/esimov/triangle"
+	"github.com/esimov/triangle"
 )
 
 var (
@@ -27,9 +27,15 @@ var (
 	lineWidth       = flag.Float64("width", 1, "Wireframe line width")
 	isSolid         = flag.Bool("solid", false, "Solid line color")
 	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
+	outputToSVG	= flag.Bool("svg", false, "Save to SVG")
 )
 
 func main() {
+	var (
+		triangles []triangle.Triangle
+		points []triangle.Point
+		processErr error
+	)
 	flag.Parse()
 
 	if len(*source) == 0 || len(*destination) == 0 {
@@ -43,7 +49,7 @@ func main() {
 
 	toProcess := make(map[string]string)
 
-	p := &tri.Processor{
+	p := &triangle.Processor{
 		BlurRadius:      *blurRadius,
 		SobelThreshold:  *sobelThreshold,
 		PointsThreshold: *pointsThreshold,
@@ -53,6 +59,7 @@ func main() {
 		LineWidth:       *lineWidth,
 		IsSolid:         *isSolid,
 		Grayscale:       *grayscale,
+		OutputToSVG:	*outputToSVG,
 	}
 
 	switch mode := fs.Mode(); {
@@ -109,16 +116,30 @@ func main() {
 	}
 
 	for in, out := range toProcess {
+		svg := &triangle.SVG{
+			Title: "Delaunay image triangulator",
+			Lines: []triangle.Line{},
+			Description: "Convert images to computer generated art using delaunay triangulation.",
+			StrokeWidth: p.LineWidth,
+			StrokeLineCap: "round", //butt, round, square
+			Processor: *p,
+		}
+
+		img := &triangle.Image{*p}
+
 		file, err := os.Open(in)
 		if err != nil {
 			log.Fatalf("Unable to open source file: %v", err)
 		}
-		defer file.Close()
 
 		s := new(spinner)
 		s.start("Generating triangulated image...")
 		start := time.Now()
-		_, triangles, points, processErr := p.Process(file, out)
+		if p.OutputToSVG {
+			triangles, points, processErr = svg.Process(file, out)
+		} else {
+			triangles, points, processErr = img.Process(file, out)
+		}
 		s.stop()
 
 		if processErr == nil {
@@ -128,6 +149,7 @@ func main() {
 		} else {
 			fmt.Printf("\nError converting image: %s: %s", file.Name(), processErr.Error())
 		}
+		file.Close()
 	}
 }
 

@@ -1,13 +1,14 @@
 package triangle
 
 import (
+	"fmt"
+	"github.com/fogleman/gg"
 	"image"
 	"image/color"
 	"image/png"
 	"io"
 	"os"
-
-	"github.com/fogleman/gg"
+	"text/template"
 )
 
 const (
@@ -27,13 +28,43 @@ type Processor struct {
 	LineWidth       float64
 	IsSolid         bool
 	Grayscale       bool
+	OutputToSVG     bool
+}
+
+type Line struct {
+	P0          Node
+	P1          Node
+	P2          Node
+	P3          Node
+	FillColor   color.RGBA
+	StrokeColor color.RGBA
+}
+
+type Image struct {
+	Processor
+}
+
+type SVG struct {
+	Width         int
+	Height        int
+	Title         string
+	Lines         []Line
+	Color         color.RGBA
+	Description   string
+	StrokeLineCap string
+	StrokeWidth   float64
+	Processor
+}
+
+type Drawer interface {
+	Process(io.Reader, string) ([]Triangle, []Point, error)
 }
 
 // Process : Triangulate the source image
-func (p *Processor) Process(file io.Reader, output string) (*os.File, []Triangle, []Point, error) {
+func (im *Image) Process(file io.Reader, output string) ([]Triangle, []Point, error) {
 	src, _, err := image.Decode(file)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	width, height := src.Bounds().Dx(), src.Bounds().Dy()
@@ -45,14 +76,14 @@ func (p *Processor) Process(file io.Reader, output string) (*os.File, []Triangle
 	delaunay := &Delaunay{}
 	img := toNRGBA(src)
 
-	blur := Stackblur(img, uint32(width), uint32(height), uint32(p.BlurRadius))
+	blur := Stackblur(img, uint32(width), uint32(height), uint32(im.BlurRadius))
 	gray := Grayscale(blur)
-	sobel := SobelFilter(gray, float64(p.SobelThreshold))
-	points := GetEdgePoints(sobel, p.PointsThreshold, p.MaxPoints)
+	sobel := SobelFilter(gray, float64(im.SobelThreshold))
+	points := GetEdgePoints(sobel, im.PointsThreshold, im.MaxPoints)
 	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
 
 	var srcImg *image.NRGBA
-	if p.Grayscale {
+	if im.Grayscale {
 		srcImg = gray
 	} else {
 		srcImg = img
@@ -70,17 +101,17 @@ func (p *Processor) Process(file io.Reader, output string) (*os.File, []Triangle
 		cx := float64(p0.X+p1.X+p2.X) * 0.33333
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx) | 0) + (int(cy) | 0) * width) * 4
+		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
 		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
 
-		var lineColor color.RGBA
-		if p.IsSolid {
-			lineColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
+		var strokeColor color.RGBA
+		if im.IsSolid {
+			strokeColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
 		} else {
-			lineColor = color.RGBA{R: r, G: g, B: b, A: 255}
+			strokeColor = color.RGBA{R: r, G: g, B: b, A: 255}
 		}
 
-		switch p.Wireframe {
+		switch im.Wireframe {
 		case WITHOUT_WIREFRAME:
 			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
 			ctx.FillPreserve()
@@ -88,13 +119,13 @@ func (p *Processor) Process(file io.Reader, output string) (*os.File, []Triangle
 		case WITH_WIREFRAME:
 			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
 			ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R: 0, G: 0, B: 0, A: 20}))
-			ctx.SetLineWidth(p.LineWidth)
+			ctx.SetLineWidth(im.LineWidth)
 			ctx.FillPreserve()
 			ctx.StrokePreserve()
 			ctx.Stroke()
 		case WIREFRAME_ONLY:
-			ctx.SetStrokeStyle(gg.NewSolidPattern(lineColor))
-			ctx.SetLineWidth(p.LineWidth)
+			ctx.SetStrokeStyle(gg.NewSolidPattern(strokeColor))
+			ctx.SetLineWidth(im.LineWidth)
 			ctx.StrokePreserve()
 			ctx.Stroke()
 		}
@@ -103,24 +134,125 @@ func (p *Processor) Process(file io.Reader, output string) (*os.File, []Triangle
 
 	fq, err := os.Create(output)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	defer fq.Close()
 
 	newimg := ctx.Image()
 	// Apply a noise on the final image. This will give it a more artistic look.
-	if p.Noise > 0 {
-		noisyImg := Noise(p.Noise, newimg, newimg.Bounds().Dx(), newimg.Bounds().Dy())
+	if im.Noise > 0 {
+		noisyImg := Noise(im.Noise, newimg, newimg.Bounds().Dx(), newimg.Bounds().Dy())
 		if err = png.Encode(fq, noisyImg); err != nil {
-			return nil, nil, nil, err
+			return nil, nil, err
 		}
 	} else {
 		if err = png.Encode(fq, newimg); err != nil {
-			return nil, nil, nil, err
+			return nil, nil, err
 		}
 	}
 
-	return fq, triangles, points, err
+	return triangles, points, err
+}
+
+func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, error) {
+	const SVG_TEMPLATE = `<?xml version="1.0" ?>
+	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+	  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+	<svg width="{{.Width}}px" height="{{.Height}}px" viewBox="0 0 {{.Width}} {{.Height}}"
+	     xmlns="http://www.w3.org/2000/svg" version="1.1">
+	  <title>{{.Title}}</title>
+	  <desc>{{.Description}}</desc>
+	  <!-- Points -->
+	  <g stroke-linecap="{{.StrokeLineCap}}" stroke-width="{{.StrokeWidth}}">
+	    {{range .Lines}}
+		<path
+			fill="rgba({{.FillColor.R}},{{.FillColor.G}},{{.FillColor.B}},{{.FillColor.A}})"
+	   		stroke="rgba({{.StrokeColor.R}},{{.StrokeColor.G}},{{.StrokeColor.B}},{{.StrokeColor.A}})"
+			d="M{{.P0.X}},{{.P0.Y}} L{{.P1.X}},{{.P1.Y}} L{{.P2.X}},{{.P2.Y}} L{{.P3.X}},{{.P3.Y}}"
+		/>
+	    {{end}}</g>
+	</svg>`
+
+	var (
+		lines     []Line
+		fillColor color.RGBA
+		strokeColor color.RGBA
+	)
+
+	src, _, err := image.Decode(file)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	width, height := src.Bounds().Dx(), src.Bounds().Dy()
+	ctx := gg.NewContext(width, height)
+	ctx.DrawRectangle(0, 0, float64(width), float64(height))
+	ctx.SetRGBA(1, 1, 1, 1)
+	ctx.Fill()
+
+	delaunay := &Delaunay{}
+	img := toNRGBA(src)
+
+	blur := Stackblur(img, uint32(width), uint32(height), uint32(svg.BlurRadius))
+	gray := Grayscale(blur)
+	sobel := SobelFilter(gray, float64(svg.SobelThreshold))
+	points := GetEdgePoints(sobel, svg.PointsThreshold, svg.MaxPoints)
+	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
+
+	var srcImg *image.NRGBA
+	if svg.Grayscale {
+		srcImg = gray
+	} else {
+		srcImg = img
+	}
+
+	for _, t := range triangles {
+		p0, p1, p2 := t.Nodes[0], t.Nodes[1], t.Nodes[2]
+		cx := float64(p0.X+p1.X+p2.X) * 0.33333
+		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
+
+		j := ((int(cx)|0) + (int(cy)|0)*width) * 4
+		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
+
+		if svg.IsSolid {
+			strokeColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
+		} else {
+			strokeColor = color.RGBA{R: r, G: g, B: b, A: 255}
+		}
+
+		switch svg.Wireframe {
+		case WITHOUT_WIREFRAME, WITH_WIREFRAME:
+			fillColor = color.RGBA{R: r, G: g, B: b, A: 255}
+		case WIREFRAME_ONLY:
+			fillColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
+		}
+		lines = append(lines, []Line{
+			Line{
+				Node{p0.X, p0.Y},
+				Node{p1.X, p1.Y},
+				Node{p2.X, p2.Y},
+				Node{p0.X, p0.Y},
+				fillColor,
+				strokeColor,
+			},
+		}...)
+	}
+	svg.Width = width
+	svg.Height = height
+	svg.Lines = lines
+
+	fq, err := os.Create(output)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer fq.Close()
+
+	tmpl := template.Must(template.New("svg").Parse(SVG_TEMPLATE))
+	if err := tmpl.Execute(fq, svg); err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+	return triangles, points, err
 }
 
 // toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
