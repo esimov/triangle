@@ -8,20 +8,20 @@ import (
 type kernel [][]int32
 
 var (
-	kernelX kernel = kernel{
+	kernelX = kernel{
 		{-1, 0, 1},
 		{-2, 0, 2},
 		{-1, 0, 1},
 	}
 
-	kernelY kernel = kernel{
+	kernelY = kernel{
 		{-1, -2, -1},
 		{0, 0, 0},
 		{1, 2, 1},
 	}
 )
 
-// Detect image edges.
+// SobelFilter detect image edges.
 // See https://en.wikipedia.org/wiki/Sobel_operator
 func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	var sumX, sumY int32
@@ -68,7 +68,7 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	dataLength := dx * dy * 4
 	edges := make([]int32, dataLength)
 
-	// Apply the kernel values.
+	// Apply the kernel values
 	for i := 0; i < dataLength; i++ {
 		edges[i] = 0
 		if i%4 != 0 {
@@ -79,7 +79,7 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 		}
 	}
 
-	// Generate the new image with the sobel filter applied.
+	// Generate the new image with the sobel filter applied
 	for idx := 0; idx < len(edges); idx += 4 {
 		dst.Pix[idx] = uint8(edges[idx])
 		dst.Pix[idx+1] = uint8(edges[idx+1])
@@ -89,7 +89,7 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	return dst
 }
 
-// Group pixels into 2D array, each one containing the pixel RGB value.
+// getImageData groups pixels into a 2D array, each one containing the pixel's RGB value.
 func getImageData(img *image.NRGBA) [][]uint8 {
 	dx, dy := img.Bounds().Max.X, img.Bounds().Max.Y
 	pixels := make([][]uint8, dx*dy*4)

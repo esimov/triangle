@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	// Flags
+	// Command line flags
 	source          = flag.String("in", "", "Source")
 	destination     = flag.String("out", "", "Destination")
 	blurRadius      = flag.Int("blur", 4, "Blur radius")
@@ -136,9 +136,9 @@ func main() {
 		s.start("Generating triangulated image...")
 		start := time.Now()
 		if p.OutputToSVG {
-			triangles, points, processErr = svg.Process(file, out)
+			triangles, points, processErr = svg.Draw(file, out)
 		} else {
-			triangles, points, processErr = img.Process(file, out)
+			triangles, points, processErr = img.Draw(file, out)
 		}
 		s.stop()
 
@@ -176,7 +176,7 @@ func (s *spinner) start(message string) {
 	}()
 }
 
-// End process
+// Stop process
 func (s *spinner) stop() {
 	s.stopChan <- struct{}{}
 }

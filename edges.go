@@ -6,18 +6,21 @@ import (
 	"time"
 )
 
-const POINT_RATE = 0.875
+// PointRate defines the default point rate.
+// Changing this value will modify the triangles sizes.
+const PointRate = 0.875
 
-// Get the edge points after the Sobel filter has been applied.
+// GetEdgePoints retrieves the triangle points after the Sobel threshold has been applied.
 func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int) []Point {
 	rand.Seed(time.Now().UTC().UnixNano())
 	width, height := img.Bounds().Max.X, img.Bounds().Max.Y
 
 	var (
-		points                       []Point
-		sum, total                   int
-		x, y, row, col, sx, sy, step int
-		dpoints                      []Point
+		sum, total     int
+		x, y, sx, sy   int
+		row, col, step int
+		points         []Point
+		dpoints        []Point
 	)
 
 	for y = 0; y < height; y++ {
@@ -48,7 +51,7 @@ func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int) []Point {
 	}
 	ilen := len(points)
 	tlen := ilen
-	limit := int(float64(ilen) * POINT_RATE)
+	limit := int(float64(ilen) * PointRate)
 
 	if limit > maxPoints {
 		limit = maxPoints

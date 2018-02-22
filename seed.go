@@ -13,7 +13,7 @@ type prng struct {
 	div       float64
 }
 
-// Apply a noise factor, like adobe's grain filter
+// Noise apply a noise factor, like adobe's grain filter to create a despeckle like image.
 func Noise(amount int, pxl image.Image, w, h int) *image.NRGBA64 {
 	noiseImg := image.NewNRGBA64(image.Rect(0, 0, w, h))
 	prng := &prng{
@@ -27,7 +27,8 @@ func Noise(amount int, pxl image.Image, w, h int) *image.NRGBA64 {
 			noise := (prng.randomSeed() - 0.01) * float64(amount)
 			r, g, b, a := pxl.At(x, y).RGBA()
 			rf, gf, bf := float64(r>>8), float64(g>>8), float64(b>>8)
-			// Check if color do not overflow the maximum limit after noise has been applied
+
+			// Check if color does not overflow the maximum limit after noise has been applied.
 			if math.Abs(rf+noise) < 255 && math.Abs(gf+noise) < 255 && math.Abs(bf+noise) < 255 {
 				rf += noise
 				gf += noise
@@ -42,6 +43,7 @@ func Noise(amount int, pxl image.Image, w, h int) *image.NRGBA64 {
 	return noiseImg
 }
 
+// nextLongRand retrieve the next long random number.
 func (prng *prng) nextLongRand(seed int) int {
 	lo := prng.a * (seed & 0xffff)
 	hi := prng.a * (seed >> 16)
@@ -59,12 +61,13 @@ func (prng *prng) nextLongRand(seed int) int {
 	return lo
 }
 
+// randomSeed generates a random seed.
 func (prng *prng) randomSeed() float64 {
 	prng.randomNum = prng.nextLongRand(prng.randomNum)
 	return float64(prng.randomNum) * prng.div
 }
 
-// Returns the smallest number between two numbers.
+// min returns the smallest value between two numbers.
 func min(x, y uint8) uint8 {
 	if x < y {
 		return x
@@ -72,7 +75,7 @@ func min(x, y uint8) uint8 {
 	return y
 }
 
-// Returns the biggest number between two numbers.
+// max returns the biggest value between two numbers.
 func max(x, y uint8) uint8 {
 	if x > y {
 		return x

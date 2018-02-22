@@ -1,22 +1,26 @@
 package triangle
 
+// Point defines a struct having as components the point X and Y coordinate position.
 type Point struct {
 	x, y int
 }
 
+// Node struct having as components the node X and Y coordinate position.
 type Node struct {
 	X, Y int
 }
 
+// Struct which defines a circle geometry element.
 type circle struct {
 	x, y, radius int
 }
 
+// newNode creates a new node.
 func newNode(x, y int) Node {
 	return Node{x, y}
 }
 
-// Check if two nodes are approximately equals.
+// isEq check if two nodes are approximately equals.
 func (n Node) isEq(p Node) bool {
 	dx := n.X - p.X
 	dy := n.Y - p.Y
@@ -33,17 +37,18 @@ func (n Node) isEq(p Node) bool {
 	return false
 }
 
+// Edge struct having as component the node list.
 type edge struct {
 	nodes []Node
 }
 
-// Create a new edge.
+// newEdge creates a new edge.
 func newEdge(p0, p1 Node) []Node {
 	nodes := []Node{p0, p1}
 	return nodes
 }
 
-// Check if two edges are approximately equals.
+// isEq check if two edge are approximately equals.
 func (e edge) isEq(edge edge) bool {
 	na := e.nodes
 	nb := edge.nodes
@@ -57,15 +62,17 @@ func (e edge) isEq(edge edge) bool {
 	return false
 }
 
+// Triangle struct which defines the basic components of a triangle.
+// It's constructed from the nodes, it's edges and the circumcircle which describes the triangle circumference.
 type Triangle struct {
 	Nodes  []Node
 	edges  []edge
 	circle circle
 }
 
-var t Triangle = Triangle{}
+var t = Triangle{}
 
-// Create a new triangle which circumcircle encloses the point to be added.
+// newTriangle creates a new triangle which circumcircle encloses the point to be added.
 func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	t.Nodes = []Node{p0, p1, p2}
 	t.edges = []edge{{newEdge(p0, p1)}, {newEdge(p1, p2)}, {newEdge(p2, p0)}}
@@ -94,12 +101,14 @@ func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	return t
 }
 
+// Delaunay is the main entry struct which defines the delaunay system.
 type Delaunay struct {
 	width     int
 	height    int
 	triangles []Triangle
 }
 
+// Init initialize the delaunay structure.
 func (d *Delaunay) Init(width, height int) *Delaunay {
 	d.width = width
 	d.height = height
@@ -110,7 +119,7 @@ func (d *Delaunay) Init(width, height int) *Delaunay {
 	return d
 }
 
-// Clear the delaunay triangles slice.
+// clear method clears the delaunay triangles slice.
 func (d *Delaunay) clear() {
 	p0 := newNode(0, 0)
 	p1 := newNode(d.width, 0)
@@ -125,11 +134,12 @@ func (d *Delaunay) clear() {
 // Insert new triangles into the delaunay triangles slice.
 func (d *Delaunay) Insert(points []Point) *Delaunay {
 	var (
-		i, j, k              int
-		x, y, dx, dy, distSq int
-		polygon              []edge
-		edges                []edge     = []edge{}
-		temps                []Triangle = []Triangle{}
+		i, j, k      int
+		x, y, dx, dy int
+		distSq       int
+		polygon      []edge
+		edges        []edge
+		temps        []Triangle
 	)
 
 	for k = 0; k < len(points); k++ {
@@ -184,7 +194,7 @@ func (d *Delaunay) Insert(points []Point) *Delaunay {
 	return d
 }
 
-// Get the generated triangles.
+// GetTriangles return the generated triangles.
 func (d *Delaunay) GetTriangles() []Triangle {
 	return d.triangles
 }

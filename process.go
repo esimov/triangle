@@ -2,22 +2,26 @@ package triangle
 
 import (
 	"fmt"
-	"github.com/fogleman/gg"
 	"image"
 	"image/color"
 	"image/png"
 	"io"
 	"os"
 	"text/template"
+
+	"github.com/fogleman/gg"
 )
 
 const (
-	WITHOUT_WIREFRAME = iota
-	WITH_WIREFRAME
-	WIREFRAME_ONLY
+	// WithoutWireframe - generates triangles without stroke
+	WithoutWireframe = iota
+	// WithWireframe - generates triangles with stroke
+	WithWireframe
+	// WireframeOnly - generates triangles only with wireframe
+	WireframeOnly
 )
 
-// Processor : type with processing options
+// Processor type with processing options
 type Processor struct {
 	BlurRadius      int
 	SobelThreshold  int
@@ -31,6 +35,7 @@ type Processor struct {
 	OutputToSVG     bool
 }
 
+// Line defines the SVG line parameters.
 type Line struct {
 	P0          Node
 	P1          Node
@@ -40,10 +45,12 @@ type Line struct {
 	StrokeColor color.RGBA
 }
 
+// Image extends the Processor struct.
 type Image struct {
 	Processor
 }
 
+// SVG extends the Processor struct with the SVG parameters.
 type SVG struct {
 	Width         int
 	Height        int
@@ -56,12 +63,18 @@ type SVG struct {
 	Processor
 }
 
+// Drawer interface which defines the Draw method.
+// This method needs to be implemented by every struct which defines a Draw method.
+// This is meant for code reusing and modularity. In our case the image can be triangulated as raster image or SVG.
 type Drawer interface {
-	Process(io.Reader, string) ([]Triangle, []Point, error)
+	Draw(io.Reader, string) ([]Triangle, []Point, error)
 }
 
-// Process : Triangulate the source image
-func (im *Image) Process(file io.Reader, output string) ([]Triangle, []Point, error) {
+// Draw triangulate the source image and output the result to an image file.
+// It returns the number of triangles generated, the number of points and the error in case exists.
+func (im *Image) Draw(file io.Reader, output string) ([]Triangle, []Point, error) {
+	var srcImg *image.NRGBA
+
 	src, _, err := image.Decode(file)
 	if err != nil {
 		return nil, nil, err
@@ -82,7 +95,6 @@ func (im *Image) Process(file io.Reader, output string) ([]Triangle, []Point, er
 	points := GetEdgePoints(sobel, im.PointsThreshold, im.MaxPoints)
 	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
 
-	var srcImg *image.NRGBA
 	if im.Grayscale {
 		srcImg = gray
 	} else {
@@ -101,7 +113,7 @@ func (im *Image) Process(file io.Reader, output string) ([]Triangle, []Point, er
 		cx := float64(p0.X+p1.X+p2.X) * 0.33333
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
+		j := ((int(cx)|0) + (int(cy)|0)*width) * 4
 		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
 
 		var strokeColor color.RGBA
@@ -112,18 +124,18 @@ func (im *Image) Process(file io.Reader, output string) ([]Triangle, []Point, er
 		}
 
 		switch im.Wireframe {
-		case WITHOUT_WIREFRAME:
+		case WithoutWireframe:
 			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
 			ctx.FillPreserve()
 			ctx.Fill()
-		case WITH_WIREFRAME:
+		case WithWireframe:
 			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
 			ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R: 0, G: 0, B: 0, A: 20}))
 			ctx.SetLineWidth(im.LineWidth)
 			ctx.FillPreserve()
 			ctx.StrokePreserve()
 			ctx.Stroke()
-		case WIREFRAME_ONLY:
+		case WireframeOnly:
 			ctx.SetStrokeStyle(gg.NewSolidPattern(strokeColor))
 			ctx.SetLineWidth(im.LineWidth)
 			ctx.StrokePreserve()
@@ -154,8 +166,10 @@ func (im *Image) Process(file io.Reader, output string) ([]Triangle, []Point, er
 	return triangles, points, err
 }
 
-func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, error) {
-	const SVG_TEMPLATE = `<?xml version="1.0" ?>
+// Draw triangulate the source image and output the result to an SVG file.
+// It returns the number of triangles generated, the number of points and the error in case exists.
+func (svg *SVG) Draw(file io.Reader, output string) ([]Triangle, []Point, error) {
+	const SVGTemplate = `<?xml version="1.0" ?>
 	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
 	  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 	<svg width="{{.Width}}px" height="{{.Height}}px" viewBox="0 0 {{.Width}} {{.Height}}"
@@ -173,6 +187,7 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 	    {{end}}</g>
 	</svg>`
 
+	var srcImg *image.NRGBA
 	var (
 		lines       []Line
 		fillColor   color.RGBA
@@ -199,7 +214,6 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 	points := GetEdgePoints(sobel, svg.PointsThreshold, svg.MaxPoints)
 	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
 
-	var srcImg *image.NRGBA
 	if svg.Grayscale {
 		srcImg = gray
 	} else {
@@ -221,9 +235,9 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 		}
 
 		switch svg.Wireframe {
-		case WITHOUT_WIREFRAME, WITH_WIREFRAME:
+		case WithoutWireframe, WithWireframe:
 			fillColor = color.RGBA{R: r, G: g, B: b, A: 255}
-		case WIREFRAME_ONLY:
+		case WireframeOnly:
 			fillColor = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 		}
 		lines = append(lines, []Line{
@@ -247,7 +261,7 @@ func (svg *SVG) Process(file io.Reader, output string) ([]Triangle, []Point, err
 	}
 	defer fq.Close()
 
-	tmpl := template.Must(template.New("svg").Parse(SVG_TEMPLATE))
+	tmpl := template.Must(template.New("svg").Parse(SVGTemplate))
 	if err := tmpl.Execute(fq, svg); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
