@@ -72,7 +72,7 @@ $ triangle -in samples/input.jpg -out output.png -svg=1
 ```
 
 ### Multiple image processing with a single command
-You can even transform multiple images from a specific folder with one command, concurently, by specifying as `-in` flag the source folder and as `-out` flag the destination folder. Example:
+You can transform even multiple images from a specific folder with a single command by specifying as `-in` flag the source folder and as `-out` flag the destination folder.
 
 ```bash
 $ triangle -in ./samples/ -out ./ouput -wireframe=0 -max=3500 -width=2 -blur=2 -noise=4
