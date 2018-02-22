@@ -52,8 +52,12 @@ The following flags are supported:
 | `wireframe` | 0 | Wireframe mode (without,with,both) |
 | `width` | 1 | Wireframe line width |
 | `gray` | false | Convert to grayscale |
+| `svg` | false | Save as SVG |
 
-Setting a lower points value, the resulted image will be more like a cubic painting. You can even add a noise factor, giving a more artistic, despeckle like result for the final image.  
+#### Output as image or SVG
+By default the output is saved to an image file, but setting the `-svg` flag as true you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. Using a small image as input source, exporting to an `*.svg` file will generate a very low processing footprint whitout image loss.
+
+Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, giving a more artistic, despeckle like result for the final image.  
 
 In case the `gray` filter is set as `true` the resulting triangulated image will be converted to grayscale mode.
 
