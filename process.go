@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"text/template"
-
 	"github.com/fogleman/gg"
 )
 

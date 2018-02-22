@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
 	"github.com/esimov/triangle"
 )
 
@@ -27,7 +26,7 @@ var (
 	lineWidth       = flag.Float64("linewidth", 1, "Wireframe line width")
 	isSolid         = flag.Bool("solid", false, "Solid line color")
 	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
-	outputToSVG     = flag.Bool("svg", false, "Save to SVG")
+	outputToSVG     = flag.Bool("svg", false, "Save as SVG")
 )
 
 func main() {
