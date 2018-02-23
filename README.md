@@ -50,19 +50,9 @@ The following flags are supported:
 | `sobel` | 10 | Sobel filter threshold |
 | `solid` | false | Solid line color |
 | `wireframe` | 0 | Wireframe mode (without,with,both) |
-| `width` | 1 | Wireframe line width |
+| `linewidth` | 1 | Stroke width |
 | `gray` | false | Convert to grayscale |
 | `svg` | false | Save as SVG |
-
-Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, giving a more artistic, despeckle like result for the final image.  
-
-In case the `-gray` flag is set as `true` the resulted triangulated image will be converted to grayscale mode.
-
-Here are some examples you can experiment with:
-```bash
-$ triangle -in samples/input.jpg -out output.png -wireframe=0 -max=3500 -width=2 -blur=2
-$ triangle -in samples/input.jpg -out output.png -wireframe=2 -max=5500 -width=1 -blur=10
-```
 
 #### Output as image or SVG
 By default the output is saved to an image file, but setting the `-svg` flag as true you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. Using a small image as input source, exporting to an `*.svg` file will generate a very low processing footprint whitout image loss.
@@ -72,10 +62,18 @@ $ triangle -in samples/input.jpg -out output.png -svg=1
 ```
 
 ### Multiple image processing with a single command
-You can transform even multiple images from a specific folder with a single command by specifying as `-in` flag the source folder and as `-out` flag the destination folder.
+You can transform even multiple images from a specific folder with a single command by declaring as `-in` flag the source folder and as `-out` flag the destination folder.
 
 ```bash
 $ triangle -in ./samples/ -out ./ouput -wireframe=0 -max=3500 -width=2 -blur=2 -noise=4
+```
+
+Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, generating a more artistic, grainy image.
+
+Here are some examples you can experiment with:
+```bash
+$ triangle -in samples/input.jpg -out output.png -wireframe=0 -max=3500 -width=2 -blur=2
+$ triangle -in samples/input.jpg -out output.png -wireframe=2 -max=5500 -width=1 -blur=10
 ```
 
 Below are some of the generated images:
