@@ -67,7 +67,7 @@ You can transform even multiple images from a specific folder with a single comm
 ```bash
 $ triangle -in ./samples/ -out ./ouput -wireframe=0 -max=3500 -width=2 -blur=2 -noise=4
 ```
-
+### Tweaks
 Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, generating a more artistic, grainy image.
 
 Here are some examples you can experiment with:
@@ -76,7 +76,7 @@ $ triangle -in samples/input.jpg -out output.png -wireframe=0 -max=3500 -width=2
 $ triangle -in samples/input.jpg -out output.png -wireframe=2 -max=5500 -width=1 -blur=10
 ```
 
-Below are some of the generated images:
+### Examples
 
 <a href="https://github.com/esimov/triangle/blob/master/output/sample_3.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_3.png" width=420/></a>
 <a href="https://github.com/esimov/triangle/blob/master/output/sample_4.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_4.png" width=420/></a>
