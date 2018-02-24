@@ -31,7 +31,7 @@ var (
 	isSolid         = flag.Bool("solid", false, "Solid line color")
 	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
 	outputToSVG     = flag.Bool("svg", false, "Save as SVG")
-	outputInWeb     = flag.Bool("web", false, "Output in browser")
+	outputInWeb     = flag.Bool("web", false, "Output SVG in browser")
 )
 
 func main() {
