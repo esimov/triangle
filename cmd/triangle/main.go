@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/esimov/triangle"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/esimov/triangle"
 )
 
 const WebBrowserUrl = "localhost:8080"
@@ -149,7 +150,7 @@ func main() {
 			if p.OutputInWeb {
 				if len(toProcess) < 2 {
 					triangles, points, processErr = svg.Draw(file, fq, func() {
-						svg, err := os.OpenFile(out, os.O_CREATE | os.O_RDWR, 0755)
+						svg, err := os.OpenFile(out, os.O_CREATE|os.O_RDWR, 0755)
 						if err != nil {
 							log.Fatalf("Unable to open output file: %v", err)
 						}

@@ -2,13 +2,14 @@ package triangle
 
 import (
 	"fmt"
-	"github.com/fogleman/gg"
 	"image"
 	"image/color"
 	"image/png"
 	"io"
 	"os"
 	"text/template"
+
+	"github.com/fogleman/gg"
 )
 
 const (
@@ -219,7 +220,7 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) ([]Trian
 		cx := float64(p0.X+p1.X+p2.X) * 0.33333
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx)|0) + (int(cy)|0)*width) * 4
+		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
 		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
 
 		if svg.IsSolid {
