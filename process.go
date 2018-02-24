@@ -2,13 +2,13 @@ package triangle
 
 import (
 	"fmt"
+	"github.com/fogleman/gg"
 	"image"
 	"image/color"
 	"image/png"
 	"io"
 	"os"
 	"text/template"
-	"github.com/fogleman/gg"
 )
 
 const (
@@ -28,10 +28,11 @@ type Processor struct {
 	MaxPoints       int
 	Wireframe       int
 	Noise           int
-	LineWidth       float64
+	StrokeWidth     float64
 	IsSolid         bool
 	Grayscale       bool
 	OutputToSVG     bool
+	OutputInWeb     bool
 }
 
 // Line defines the SVG line parameters.
@@ -66,15 +67,15 @@ type SVG struct {
 // This method needs to be implemented by every struct which defines a Draw method.
 // This is meant for code reusing and modularity. In our case the image can be triangulated as raster image or SVG.
 type Drawer interface {
-	Draw(io.Reader, string) ([]Triangle, []Point, error)
+	Draw(io.Reader, io.Writer) ([]Triangle, []Point, error)
 }
 
 // Draw triangulate the source image and output the result to an image file.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (im *Image) Draw(file io.Reader, output string) ([]Triangle, []Point, error) {
+func (im *Image) Draw(input io.Reader, output io.Writer, closure func()) ([]Triangle, []Point, error) {
 	var srcImg *image.NRGBA
 
-	src, _, err := image.Decode(file)
+	src, _, err := image.Decode(input)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -112,7 +113,7 @@ func (im *Image) Draw(file io.Reader, output string) ([]Triangle, []Point, error
 		cx := float64(p0.X+p1.X+p2.X) * 0.33333
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx)|0) + (int(cy)|0)*width) * 4
+		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
 		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
 
 		var strokeColor color.RGBA
@@ -130,44 +131,38 @@ func (im *Image) Draw(file io.Reader, output string) ([]Triangle, []Point, error
 		case WithWireframe:
 			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
 			ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R: 0, G: 0, B: 0, A: 20}))
-			ctx.SetLineWidth(im.LineWidth)
+			ctx.SetLineWidth(im.StrokeWidth)
 			ctx.FillPreserve()
 			ctx.StrokePreserve()
 			ctx.Stroke()
 		case WireframeOnly:
 			ctx.SetStrokeStyle(gg.NewSolidPattern(strokeColor))
-			ctx.SetLineWidth(im.LineWidth)
+			ctx.SetLineWidth(im.StrokeWidth)
 			ctx.StrokePreserve()
 			ctx.Stroke()
 		}
 		ctx.Pop()
 	}
 
-	fq, err := os.Create(output)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer fq.Close()
-
 	newimg := ctx.Image()
 	// Apply a noise on the final image. This will give it a more artistic look.
 	if im.Noise > 0 {
 		noisyImg := Noise(im.Noise, newimg, newimg.Bounds().Dx(), newimg.Bounds().Dy())
-		if err = png.Encode(fq, noisyImg); err != nil {
+		if err = png.Encode(output, noisyImg); err != nil {
 			return nil, nil, err
 		}
 	} else {
-		if err = png.Encode(fq, newimg); err != nil {
+		if err = png.Encode(output, newimg); err != nil {
 			return nil, nil, err
 		}
 	}
-
+	closure()
 	return triangles, points, err
 }
 
 // Draw triangulate the source image and output the result to an SVG file.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (svg *SVG) Draw(file io.Reader, output string) ([]Triangle, []Point, error) {
+func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) ([]Triangle, []Point, error) {
 	const SVGTemplate = `<?xml version="1.0" ?>
 	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
 	  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
@@ -193,7 +188,7 @@ func (svg *SVG) Draw(file io.Reader, output string) ([]Triangle, []Point, error)
 		strokeColor color.RGBA
 	)
 
-	src, _, err := image.Decode(file)
+	src, _, err := image.Decode(input)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -224,7 +219,7 @@ func (svg *SVG) Draw(file io.Reader, output string) ([]Triangle, []Point, error)
 		cx := float64(p0.X+p1.X+p2.X) * 0.33333
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
+		j := ((int(cx)|0) + (int(cy)|0)*width) * 4
 		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
 
 		if svg.IsSolid {
@@ -254,17 +249,12 @@ func (svg *SVG) Draw(file io.Reader, output string) ([]Triangle, []Point, error)
 	svg.Height = height
 	svg.Lines = lines
 
-	fq, err := os.Create(output)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer fq.Close()
-
 	tmpl := template.Must(template.New("svg").Parse(SVGTemplate))
-	if err := tmpl.Execute(fq, svg); err != nil {
+	if err := tmpl.Execute(output, svg); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
+	closure()
 	return triangles, points, err
 }
 

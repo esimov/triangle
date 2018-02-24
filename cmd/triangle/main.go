@@ -3,15 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/esimov/triangle"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
-	"github.com/esimov/triangle"
 )
+
+const WebBrowserUrl = "localhost:8080"
 
 var (
 	// Command line flags
@@ -23,10 +26,11 @@ var (
 	maxPoints       = flag.Int("max", 2500, "Maximum number of points")
 	wireframe       = flag.Int("wireframe", 0, "Wireframe mode")
 	noise           = flag.Int("noise", 0, "Noise factor")
-	lineWidth       = flag.Float64("linewidth", 1, "Wireframe line width")
+	strokeWidth     = flag.Float64("stroke", 1, "Stroke width")
 	isSolid         = flag.Bool("solid", false, "Solid line color")
 	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
 	outputToSVG     = flag.Bool("svg", false, "Save as SVG")
+	outputInWeb     = flag.Bool("web", false, "Output in browser")
 )
 
 func main() {
@@ -55,10 +59,11 @@ func main() {
 		MaxPoints:       *maxPoints,
 		Wireframe:       *wireframe,
 		Noise:           *noise,
-		LineWidth:       *lineWidth,
+		StrokeWidth:     *strokeWidth,
 		IsSolid:         *isSolid,
 		Grayscale:       *grayscale,
 		OutputToSVG:     *outputToSVG,
+		OutputInWeb:     *outputInWeb,
 	}
 
 	switch mode := fs.Mode(); {
@@ -119,7 +124,7 @@ func main() {
 			Title:         "Delaunay image triangulator",
 			Lines:         []triangle.Line{},
 			Description:   "Convert images to computer generated art using delaunay triangulation.",
-			StrokeWidth:   p.LineWidth,
+			StrokeWidth:   p.StrokeWidth,
 			StrokeLineCap: "round", //butt, round, square
 			Processor:     *p,
 		}
@@ -134,10 +139,45 @@ func main() {
 		s := new(spinner)
 		s.start("Generating triangulated image...")
 		start := time.Now()
+
+		fq, err := os.Create(out)
+		if err != nil {
+			log.Fatalf("Unable to create the output file: %v", err)
+		}
+
 		if p.OutputToSVG {
-			triangles, points, processErr = svg.Draw(file, out)
+			if p.OutputInWeb {
+				if len(toProcess) < 2 {
+					triangles, points, processErr = svg.Draw(file, fq, func() {
+						svg, err := os.OpenFile(out, os.O_CREATE | os.O_RDWR, 0755)
+						if err != nil {
+							log.Fatalf("Unable to open output file: %v", err)
+						}
+
+						b, err := ioutil.ReadAll(svg)
+						if err != nil {
+							log.Fatalf("Unable to read svg file: %v", err)
+						}
+						fmt.Printf("\n\rPlease access %s", WebBrowserUrl)
+						s.stop()
+
+						handler := func(w http.ResponseWriter, r *http.Request) {
+							w.Header().Set("Content-Type", "image/svg+xml")
+							w.Write(b)
+						}
+						http.HandleFunc("/", handler)
+						log.Fatal(http.ListenAndServe(WebBrowserUrl, nil))
+					})
+				} else {
+					log.Fatal("Web browser command is supported only for a single file processing.")
+				}
+			} else {
+				triangles, points, processErr = svg.Draw(file, fq, func() {})
+				fq.Close()
+			}
 		} else {
-			triangles, points, processErr = img.Draw(file, out)
+			triangles, points, processErr = img.Draw(file, fq, func() {})
+			fq.Close()
 		}
 		s.stop()
 
