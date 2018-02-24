@@ -1,6 +1,11 @@
 
 # ![Triangle logo](https://user-images.githubusercontent.com/883386/32769128-4d9625c6-c923-11e7-9a96-030f2f0efff3.png)
 
+[![Build Status](https://travis-ci.org/esimov/triangle.svg?branch=master)](https://travis-ci.org/esimov/triangle)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat)](./LICENSE)
+[![release](https://img.shields.io/badge/release-v1.0.2-blue.svg)]()
+[![homebrew](https://img.shields.io/badge/homebrew-v1.0.2-orange.svg)]()
+
 Triangle is a tool to create image arts using the [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) technique. It takes an image as input and it converts to abstract image composed of tiles of triangles.
 
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
@@ -50,9 +55,10 @@ The following flags are supported:
 | `sobel` | 10 | Sobel filter threshold |
 | `solid` | false | Solid line color |
 | `wireframe` | 0 | Wireframe mode (without,with,both) |
-| `linewidth` | 1 | Stroke width |
+| `stroke` | 1 | Stroke width |
 | `gray` | false | Convert to grayscale |
 | `svg` | false | Save as SVG |
+| `web` | false | Output SVG in browser |
 
 #### Output as image or SVG
 By default the output is saved to an image file, but setting the `-svg` flag as true you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. Using a small image as input source, exporting to an `*.svg` file will generate a very low processing footprint whitout image loss.
@@ -61,19 +67,26 @@ By default the output is saved to an image file, but setting the `-svg` flag as 
 $ triangle -in samples/input.jpg -out output.png -svg=1
 ```
 
+Using the `-svg` together with `-web` flag you can access the svg result on the web browser.
+
+
+```bash
+$ triangle -in samples/input.jpg -out output.png -svg=1 -web=1
+```
+
 ### Multiple image processing with a single command
 You can transform even multiple images from a specific folder with a single command by declaring as `-in` flag the source folder and as `-out` flag the destination folder.
 
 ```bash
-$ triangle -in ./samples/ -out ./ouput -wireframe=0 -max=3500 -width=2 -blur=2 -noise=4
+$ triangle -in ./samples/ -out ./ouput -wireframe=0 -max=3500 -stroke=2 -blur=2 -noise=4
 ```
 ### Tweaks
 Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, generating a more artistic, grainy image.
 
 Here are some examples you can experiment with:
 ```bash
-$ triangle -in samples/input.jpg -out output.png -wireframe=0 -max=3500 -width=2 -blur=2
-$ triangle -in samples/input.jpg -out output.png -wireframe=2 -max=5500 -width=1 -blur=10
+$ triangle -in samples/input.jpg -out output.png -wireframe=0 -max=3500 -stroke=2 -blur=2
+$ triangle -in samples/input.jpg -out output.png -wireframe=2 -max=5500 -stroke=1 -blur=10
 ```
 
 ### Examples
