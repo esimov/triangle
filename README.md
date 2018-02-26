@@ -61,7 +61,7 @@ The following flags are supported:
 | `web` | false | Output SVG in browser |
 
 #### Output as image or SVG
-By default the output is saved to an image file, but setting the `-svg` flag as true you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. Using a small image as input source, exporting to an `*.svg` file will generate a very low processing footprint whitout image loss.
+By default the output is saved to an image file, but setting the `-svg` flag as true you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. Using a small image as input source, exporting to an `*.svg` file will generate a very low processing footprint whitout quality loss.
 
 ```bash
 $ triangle -in samples/input.jpg -out output.png -svg=1
