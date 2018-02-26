@@ -102,5 +102,6 @@ $ triangle -in samples/input.jpg -out output.png -wireframe=2 -max=5500 -stroke=
 
 
 ## License
+Copyright © 2018 Endre Simo
 
 This project is under the MIT License. See the [LICENSE](https://github.com/esimov/triangle/blob/master/LICENSE) file for the full license text.
