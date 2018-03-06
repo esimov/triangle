@@ -64,9 +64,9 @@ type SVG struct {
 	Processor
 }
 
-// Drawer interface which defines the Draw method.
-// This method needs to be implemented by every struct which defines a Draw method.
-// This is meant for code reusing and modularity. In our case the image can be triangulated as raster image or SVG.
+// Drawer interface defines the Draw method.
+// This has to be implemented by every struct which declares a Draw method.
+// Using this method the image can be triangulated as raster type or SVG.
 type Drawer interface {
 	Draw(io.Reader, io.Writer) ([]Triangle, []Point, error)
 }
@@ -255,6 +255,7 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) ([]Trian
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
+	// Call the closure function after the generation is completed.
 	closure()
 	return triangles, points, err
 }

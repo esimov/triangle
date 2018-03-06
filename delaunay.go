@@ -5,7 +5,7 @@ type Point struct {
 	x, y int
 }
 
-// Node struct having as components the node X and Y coordinate position.
+// Node defines a struct having as components the node X and Y coordinate position.
 type Node struct {
 	X, Y int
 }
@@ -62,8 +62,8 @@ func (e edge) isEq(edge edge) bool {
 	return false
 }
 
-// Triangle struct which defines the basic components of a triangle.
-// It's constructed from the nodes, it's edges and the circumcircle which describes the triangle circumference.
+// Triangle struct defines the basic components of a triangle.
+// It's constructed by nodes, it's edges and the circumcircle which describes the triangle circumference.
 type Triangle struct {
 	Nodes  []Node
 	edges  []edge
@@ -101,7 +101,7 @@ func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 	return t
 }
 
-// Delaunay is the main entry struct which defines the delaunay system.
+// Delaunay defines the main components for the triangulation.
 type Delaunay struct {
 	width     int
 	height    int
@@ -131,7 +131,7 @@ func (d *Delaunay) clear() {
 	d.triangles = []Triangle{t.newTriangle(p0, p1, p2), t.newTriangle(p0, p2, p3)}
 }
 
-// Insert new triangles into the delaunay triangles slice.
+// Insert will insert new triangles into the triangles slice.
 func (d *Delaunay) Insert(points []Point) *Delaunay {
 	var (
 		i, j, k      int
