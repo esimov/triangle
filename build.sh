@@ -1,5 +1,5 @@
-# Using @tidwall's shell script
 #!/bin/bash
+
 set -e
 
 VERSION="1.0.2"
