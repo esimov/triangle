@@ -7,7 +7,7 @@
 [![release](https://img.shields.io/badge/release-v1.0.2-blue.svg)]()
 [![homebrew](https://img.shields.io/badge/homebrew-v1.0.2-orange.svg)]()
 
-Triangle is a tool to create image arts using the [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) technique. It takes an image as input and it converts to abstract image composed of tiles of triangles.
+Triangle is a tool to generate image arts using the [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) method. It takes an input image and converts it to an abstract image composed of tiles of triangles.
 
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
 
@@ -15,7 +15,7 @@ Triangle is a tool to create image arts using the [delaunay triangulation](https
 * First the image is blured out to smothen the sharp pixel edges. The more blured an image is the more diffused the generated output will be.
 * Second the resulted image is converted to grayscale mode. 
 * Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulting image.
-* Lastly we apply the delaunay algorithm on the pixels obtained from the previous step.
+* Lastly the delaunay algorithm is applied on the pixels obtained from the previous step.
 
 ```go
 blur = tri.Stackblur(img, uint32(width), uint32(height), uint32(*blurRadius))
@@ -27,7 +27,7 @@ triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 ```
 ## Installation and usage
 ```bash
-$ go get github.com/esimov/triangle/cmd/triangle
+$ go get -u -f github.com/esimov/triangle/cmd/triangle
 $ go install
 ```
 ## MacOS (Brew) install
@@ -62,7 +62,7 @@ The following flags are supported:
 | `web` | false | Output SVG in browser |
 
 #### Output as image or SVG
-By default the output is saved to an image file, but setting the `-svg` flag as true you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. Using a small image as input source, exporting to an `*.svg` file will generate a very low processing footprint whitout quality loss.
+By default the output is saved to an image file, but setting the `-svg` flag as true you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. By using a small image as input source, the `SVG` export will generate an output image with a very low processing footprint but whitout quality loss.
 
 ```bash
 $ triangle -in samples/input.jpg -out output.png -svg=1
