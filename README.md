@@ -7,7 +7,7 @@
 [![release](https://img.shields.io/badge/release-v1.0.2-blue.svg)]()
 [![homebrew](https://img.shields.io/badge/homebrew-v1.0.2-orange.svg)]()
 
-Triangle is a tool to generate image arts using the [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) method. It takes an input image and converts it to an abstract image composed of tiles of triangles.
+Triangle is a tool to generate image arts with [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes an input image and converts it to an abstract image composed of tiles of triangles.
 
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
 
@@ -62,7 +62,7 @@ The following flags are supported:
 | `web` | false | Output SVG in browser |
 
 #### Output as image or SVG
-By default the output is saved to an image file, but setting the `-svg` flag as true you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. By using a small image as input source, the `SVG` export will generate an output image with a very low processing footprint but whitout quality loss.
+By default the output is saved to an image file, but setting the `-svg` flag as `true` you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. By using a small image as input source, the `SVG` export will generate an output image consuming a very low processing footprint but whitout quality loss.
 
 ```bash
 $ triangle -in samples/input.jpg -out output.png -svg=1
