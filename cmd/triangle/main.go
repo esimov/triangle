@@ -36,9 +36,9 @@ var (
 
 func main() {
 	var (
-		triangles  []triangle.Triangle
-		points     []triangle.Point
-		processErr error
+		triangles []triangle.Triangle
+		points    []triangle.Point
+		err       error
 	)
 	flag.Parse()
 
@@ -149,7 +149,7 @@ func main() {
 		if p.OutputToSVG {
 			if p.OutputInWeb {
 				if len(toProcess) < 2 {
-					triangles, points, processErr = svg.Draw(file, fq, func() {
+					_, triangles, points, err = svg.Draw(file, fq, func() {
 						svg, err := os.OpenFile(out, os.O_CREATE|os.O_RDWR, 0755)
 						if err != nil {
 							log.Fatalf("Unable to open output file: %v", err)
@@ -173,21 +173,21 @@ func main() {
 					log.Fatal("Web browser command is supported only for a single file processing.")
 				}
 			} else {
-				triangles, points, processErr = svg.Draw(file, fq, func() {})
+				_, triangles, points, err = svg.Draw(file, fq, func() {})
 				fq.Close()
 			}
 		} else {
-			triangles, points, processErr = img.Draw(file, fq, func() {})
+			_, triangles, points, err = img.Draw(file, fq, func() {})
 			fq.Close()
 		}
 		s.stop()
 
-		if processErr == nil {
+		if err == nil {
 			fmt.Printf("\nGenerated in: \x1b[92m%.2fs\n", time.Since(start).Seconds())
 			fmt.Printf("\x1b[39mTotal number of \x1b[92m%d \x1b[39mtriangles generated out of \x1b[92m%d \x1b[39mpoints\n", len(triangles), len(points))
 			fmt.Printf("Saved as: %s \x1b[92m✓\n\n", path.Base(out))
 		} else {
-			fmt.Printf("\nError converting image: %s: %s", file.Name(), processErr.Error())
+			fmt.Printf("\nError converting image: %s: %s", file.Name(), err.Error())
 		}
 		file.Close()
 	}

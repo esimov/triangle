@@ -68,27 +68,36 @@ type SVG struct {
 // This has to be implemented by every struct which declares a Draw method.
 // Using this method the image can be triangulated as raster type or SVG.
 type Drawer interface {
-	Draw(io.Reader, io.Writer) ([]Triangle, []Point, error)
+	Draw(interface{}, io.Writer) ([]Triangle, []Point, error)
 }
 
 // Draw triangulate the source image and output the result to an image file.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (im *Image) Draw(input io.Reader, output io.Writer, closure func()) ([]Triangle, []Point, error) {
-	var srcImg *image.NRGBA
+func (im *Image) Draw(input interface{}, output interface{}, closure func()) (image.Image, []Triangle, []Point, error) {
+	var (
+		err    error
+		src    interface{}
+		srcImg *image.NRGBA
+	)
 
-	src, _, err := image.Decode(input)
-	if err != nil {
-		return nil, nil, err
+	switch input.(type) {
+	case *os.File:
+		src, _, err = image.Decode(input.(io.Reader))
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	default:
+		src = input
 	}
 
-	width, height := src.Bounds().Dx(), src.Bounds().Dy()
+	width, height := src.(image.Image).Bounds().Dx(), src.(image.Image).Bounds().Dy()
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
 	ctx.SetRGBA(1, 1, 1, 1)
 	ctx.Fill()
 
 	delaunay := &Delaunay{}
-	img := toNRGBA(src)
+	img := toNRGBA(src.(image.Image))
 
 	blur := StackBlur(img, uint32(im.BlurRadius))
 	gray := Grayscale(blur)
@@ -145,25 +154,30 @@ func (im *Image) Draw(input io.Reader, output io.Writer, closure func()) ([]Tria
 		ctx.Pop()
 	}
 
-	newimg := ctx.Image()
-	// Apply a noise on the final image. This will give it a more artistic look.
-	if im.Noise > 0 {
-		noisyImg := Noise(im.Noise, newimg, newimg.Bounds().Dx(), newimg.Bounds().Dy())
-		if err = png.Encode(output, noisyImg); err != nil {
-			return nil, nil, err
+	newImg := ctx.Image()
+	switch output.(type) {
+	case *os.File:
+		// Apply a noise on the final image. This will give it a more artistic look.
+		if im.Noise > 0 {
+			noisyImg := Noise(im.Noise, newImg, newImg.Bounds().Dx(), newImg.Bounds().Dy())
+			if err = png.Encode(output.(io.Writer), noisyImg); err != nil {
+				return nil, nil, nil, err
+			}
+		} else {
+			if err = png.Encode(output.(io.Writer), newImg); err != nil {
+				return nil, nil, nil, err
+			}
 		}
-	} else {
-		if err = png.Encode(output, newimg); err != nil {
-			return nil, nil, err
-		}
+	default:
+		return newImg, nil, nil, nil
 	}
 	closure()
-	return triangles, points, err
+	return newImg, triangles, points, err
 }
 
 // Draw triangulate the source image and output the result to an SVG file.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) ([]Triangle, []Point, error) {
+func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) (image.Image, []Triangle, []Point, error) {
 	const SVGTemplate = `<?xml version="1.0" ?>
 	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
 	  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
@@ -191,7 +205,7 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) ([]Trian
 
 	src, _, err := image.Decode(input)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	width, height := src.Bounds().Dx(), src.Bounds().Dy()
@@ -257,7 +271,7 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) ([]Trian
 	}
 	// Call the closure function after the generation is completed.
 	closure()
-	return triangles, points, err
+	return nil, triangles, points, err
 }
 
 // toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
