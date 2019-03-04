@@ -15,7 +15,7 @@ import (
 	"github.com/esimov/triangle"
 )
 
-const WebBrowserUrl = "localhost:8080"
+const httpAddress = "localhost:8080"
 
 var (
 	// Command line flags
@@ -30,7 +30,6 @@ var (
 	strokeWidth     = flag.Float64("stroke", 1, "Stroke width")
 	isSolid         = flag.Bool("solid", false, "Solid line color")
 	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
-	outputToSVG     = flag.Bool("svg", false, "Save as SVG")
 	outputInWeb     = flag.Bool("web", false, "Output SVG in browser")
 )
 
@@ -63,7 +62,6 @@ func main() {
 		StrokeWidth:     *strokeWidth,
 		IsSolid:         *isSolid,
 		Grayscale:       *grayscale,
-		OutputToSVG:     *outputToSVG,
 		OutputInWeb:     *outputInWeb,
 	}
 
@@ -146,7 +144,7 @@ func main() {
 			log.Fatalf("Unable to create the output file: %v", err)
 		}
 
-		if p.OutputToSVG {
+		if filepath.Ext(out) == ".svg" {
 			if p.OutputInWeb {
 				if len(toProcess) < 2 {
 					_, triangles, points, err = svg.Draw(file, fq, func() {
@@ -159,7 +157,7 @@ func main() {
 						if err != nil {
 							log.Fatalf("Unable to read svg file: %v", err)
 						}
-						fmt.Printf("\n\rPlease access %s", WebBrowserUrl)
+						fmt.Printf("\n\rAceess the generated image on the following url: %s ", httpAddress)
 						s.stop()
 
 						handler := func(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +165,7 @@ func main() {
 							w.Write(b)
 						}
 						http.HandleFunc("/", handler)
-						log.Fatal(http.ListenAndServe(WebBrowserUrl, nil))
+						log.Fatal(http.ListenAndServe(httpAddress, nil))
 					})
 				} else {
 					log.Fatal("Web browser command is supported only for a single file processing.")
