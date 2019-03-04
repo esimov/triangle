@@ -157,7 +157,7 @@ func main() {
 						if err != nil {
 							log.Fatalf("Unable to read svg file: %v", err)
 						}
-						fmt.Printf("\n\rAceess the generated image on the following url: %s ", httpAddress)
+						fmt.Printf("\n\rAceess the generated image on the following url: http://%s ", httpAddress)
 						s.stop()
 
 						handler := func(w http.ResponseWriter, r *http.Request) {
