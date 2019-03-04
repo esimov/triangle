@@ -58,21 +58,20 @@ The following flags are supported:
 | `wireframe` | 0 | Wireframe mode (without,with,both) |
 | `stroke` | 1 | Stroke width |
 | `gray` | false | Convert to grayscale |
-| `svg` | false | Save as SVG |
 | `web` | false | Output SVG in browser |
 
 #### Output as image or SVG
-By default the output is saved to an image file, but setting the `-svg` flag as `true` you can export the resulted vertices even to an SVG file, being the perfect candidate for large poster images. By using a small image as input source, the `SVG` export will generate an output image consuming a very low processing footprint but whitout quality loss.
+By default the output is saved to an image file, but you can export the resulted vertices even to an SVG file. The CLI tool can recognize the output type directly from the file extension. This is a handy addition for those who wish to generate large images without guality loss.
 
 ```bash
-$ triangle -in samples/input.jpg -out output.png -svg=1
+$ triangle -in samples/input.jpg -out output.svg
 ```
 
-Using the `-svg` together with `-web` flag you can access the svg result on the web browser.
+Using with `-web` flag you can access the generated svg file directly on the web browser.
 
 
 ```bash
-$ triangle -in samples/input.jpg -out output.png -svg=1 -web=1
+$ triangle -in samples/input.jpg -out output.svg -web=true
 ```
 
 ### Multiple image processing with a single command
