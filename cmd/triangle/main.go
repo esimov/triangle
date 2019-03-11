@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -15,7 +14,12 @@ import (
 	"github.com/esimov/triangle"
 )
 
-const httpAddress = "localhost:8080"
+const (
+	httpAddress = "localhost:8080"
+	errorMsgColor = "\x1b[0;31m"
+	successMsgColor = "\x1b[0;32m"
+	defaultMsgColor = "\x1b[0m"
+)
 
 var (
 	// Command line flags
@@ -181,14 +185,30 @@ func main() {
 		s.stop()
 
 		if err == nil {
-			fmt.Printf("\nGenerated in: \x1b[92m%.2fs\n", time.Since(start).Seconds())
-			fmt.Printf("\x1b[39mTotal number of \x1b[92m%d \x1b[39mtriangles generated out of \x1b[92m%d \x1b[39mpoints\n", len(triangles), len(points))
-			fmt.Printf("Saved as: %s \x1b[92m✓\n\n", path.Base(out))
+			fmt.Printf("\nGenerated in: %s\n", decorateMsg(fmt.Sprintf("%.2fs", time.Since(start).Seconds()), "success"))
+			fmt.Printf(fmt.Sprintf("%sTotal number of %s%d %striangles generated out of %s%d %spoints\n",
+					defaultMsgColor, successMsgColor, len(triangles), defaultMsgColor, successMsgColor, len(points), defaultMsgColor))
+			fmt.Printf(fmt.Sprintf("Saved on: %s %s✓\n\n", fq.Name(), successMsgColor))
 		} else {
-			fmt.Printf("\nError on generating the triangulated image: %s \n\tReason: %s", file.Name(), err.Error())
+			fmt.Printf(decorateMsg(fmt.Sprintf("\nError on generating the triangulated image: %s \n\tReason: %s", file.Name(), err.Error()), "error"))
 		}
 		file.Close()
 	}
+}
+
+// decorateMsg changes the color of a string
+func decorateMsg(s string, color string) string {
+	switch color {
+	case "success":
+		s = successMsgColor + s
+	case "error":
+		s = errorMsgColor + s
+	case "default":
+		s = defaultMsgColor + s
+	default:
+		return s
+	}
+	return s + "\x1b[0m"
 }
 
 type spinner struct {
@@ -206,7 +226,7 @@ func (s *spinner) start(message string) {
 				case <-s.stopChan:
 					return
 				default:
-					fmt.Printf("\r%s%s %c%s", message, "\x1b[92m", r, "\x1b[39m")
+					fmt.Printf("\r%s%s %c%s", message, successMsgColor, r, defaultMsgColor)
 					time.Sleep(time.Millisecond * 100)
 				}
 			}
