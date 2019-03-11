@@ -185,19 +185,19 @@ func main() {
 		s.stop()
 
 		if err == nil {
-			fmt.Printf("\nGenerated in: %s\n", decorateMsg(fmt.Sprintf("%.2fs", time.Since(start).Seconds()), "success"))
+			fmt.Printf("\nGenerated in: %s\n", decorateText(fmt.Sprintf("%.2fs", time.Since(start).Seconds()), "success"))
 			fmt.Printf(fmt.Sprintf("%sTotal number of %s%d %striangles generated out of %s%d %spoints\n",
 				defaultMsgColor, successMsgColor, len(triangles), defaultMsgColor, successMsgColor, len(points), defaultMsgColor))
 			fmt.Printf(fmt.Sprintf("Saved on: %s %s✓\n\n", fq.Name(), successMsgColor))
 		} else {
-			fmt.Printf(decorateMsg(fmt.Sprintf("\nError on generating the triangulated image: %s \n\tReason: %s", file.Name(), err.Error()), "error"))
+			fmt.Printf(decorateText(fmt.Sprintf("\nError on generating the triangulated image: %s \n\tReason: %s", file.Name(), err.Error()), "error"))
 		}
 		file.Close()
 	}
 }
 
-// decorateMsg changes the color of a string
-func decorateMsg(s string, color string) string {
+// decorateText changes the color of a string
+func decorateText(s string, color string) string {
 	switch color {
 	case "success":
 		s = successMsgColor + s
