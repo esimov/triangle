@@ -185,7 +185,7 @@ func main() {
 			fmt.Printf("\x1b[39mTotal number of \x1b[92m%d \x1b[39mtriangles generated out of \x1b[92m%d \x1b[39mpoints\n", len(triangles), len(points))
 			fmt.Printf("Saved as: %s \x1b[92m✓\n\n", path.Base(out))
 		} else {
-			fmt.Printf("\nError converting image: %s: %s", file.Name(), err.Error())
+			fmt.Printf("\nError on generating the triangulated image: %s \n\tReason: %s", file.Name(), err.Error())
 		}
 		file.Close()
 	}

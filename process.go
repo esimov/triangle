@@ -1,6 +1,7 @@
 package triangle
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -91,6 +92,11 @@ func (im *Image) Draw(input interface{}, output interface{}, closure func()) (im
 	}
 
 	width, height := src.(image.Image).Bounds().Dx(), src.(image.Image).Bounds().Dy()
+
+	if width <= 1 || height <= 1 {
+		err := errors.New("The image widht and height must be greather than 1px.\n")
+		return nil, nil, nil, err
+	}
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
 	ctx.SetRGBA(1, 1, 1, 1)
