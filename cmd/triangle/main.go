@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	httpAddress = "localhost:8080"
-	errorMsgColor = "\x1b[0;31m"
+	httpAddress     = "localhost:8080"
+	errorMsgColor   = "\x1b[0;31m"
 	successMsgColor = "\x1b[0;32m"
 	defaultMsgColor = "\x1b[0m"
 )
@@ -132,7 +132,7 @@ func main() {
 			Processor:     *p,
 		}
 
-		img := &triangle.Image{*p}
+		tri := &triangle.Image{*p}
 
 		file, err := os.Open(in)
 		if err != nil {
@@ -179,7 +179,7 @@ func main() {
 				fq.Close()
 			}
 		} else {
-			_, triangles, points, err = img.Draw(file, fq, func() {})
+			_, triangles, points, err = tri.Draw(file, fq, func() {})
 			fq.Close()
 		}
 		s.stop()
@@ -187,7 +187,7 @@ func main() {
 		if err == nil {
 			fmt.Printf("\nGenerated in: %s\n", decorateMsg(fmt.Sprintf("%.2fs", time.Since(start).Seconds()), "success"))
 			fmt.Printf(fmt.Sprintf("%sTotal number of %s%d %striangles generated out of %s%d %spoints\n",
-					defaultMsgColor, successMsgColor, len(triangles), defaultMsgColor, successMsgColor, len(points), defaultMsgColor))
+				defaultMsgColor, successMsgColor, len(triangles), defaultMsgColor, successMsgColor, len(points), defaultMsgColor))
 			fmt.Printf(fmt.Sprintf("Saved on: %s %s✓\n\n", fq.Name(), successMsgColor))
 		} else {
 			fmt.Printf(decorateMsg(fmt.Sprintf("\nError on generating the triangulated image: %s \n\tReason: %s", file.Name(), err.Error()), "error"))
