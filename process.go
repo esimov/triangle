@@ -94,7 +94,7 @@ func (im *Image) Draw(input interface{}, output interface{}, closure func()) (im
 	width, height := src.(image.Image).Bounds().Dx(), src.(image.Image).Bounds().Dy()
 
 	if width <= 1 || height <= 1 {
-		err := errors.New("The image widht and height must be greather than 1px.\n")
+		err := errors.New("The image width and height must be greater than 1px.\n")
 		return nil, nil, nil, err
 	}
 	ctx := gg.NewContext(width, height)
