@@ -72,7 +72,8 @@ type Drawer interface {
 	Draw(interface{}, io.Writer) ([]Triangle, []Point, error)
 }
 
-// Draw triangulate the source image and output the result to an image file.
+// Draw is an interface method which triangulates the source type and outputs the result even to an image or a pixel array.
+// The input could be an image file or a pixel array. This is the reason why interface is used as argument type.
 // It returns the number of triangles generated, the number of points and the error in case exists.
 func (im *Image) Draw(input interface{}, output interface{}, closure func()) (image.Image, []Triangle, []Point, error) {
 	var (
