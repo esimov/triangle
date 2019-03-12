@@ -15,13 +15,9 @@ import (
 )
 
 const helperBanner = `
-     /\
-    /  \
-   / /\ \
-  / /__\ \
- /________\
+     ▲ TRIANGLE
 
- Version: %s
+     Version: %s
 
 `
 const (
