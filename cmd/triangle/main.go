@@ -14,12 +14,25 @@ import (
 	"github.com/esimov/triangle"
 )
 
+const helperBanner = `
+     /\
+    /  \
+   / /\ \
+  / /__\ \
+ /________\
+
+ Version: %s
+
+`
 const (
 	httpAddress     = "localhost:8080"
 	errorMsgColor   = "\x1b[0;31m"
 	successMsgColor = "\x1b[0;32m"
 	defaultMsgColor = "\x1b[0m"
 )
+
+// version indicates the current build version.
+var version string
 
 var (
 	// Command line flags
@@ -43,6 +56,10 @@ func main() {
 		points    []triangle.Point
 		err       error
 	)
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, fmt.Sprintf(helperBanner, version))
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	if len(*source) == 0 || len(*destination) == 0 {
