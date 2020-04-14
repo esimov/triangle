@@ -3,7 +3,7 @@
 
 [![Build Status](https://travis-ci.org/esimov/triangle.svg?branch=master)](https://travis-ci.org/esimov/triangle)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/esimov/triangle)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat)](./LICENSE)
+[![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
 [![release](https://img.shields.io/badge/release-v1.0.4-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.0.4)
 [![homebrew](https://img.shields.io/badge/homebrew-v1.0.4-orange.svg)](https://github.com/esimov/homebrew-triangle)
 
