@@ -100,7 +100,7 @@ func (im *Image) Draw(input interface{}, output interface{}, closure func()) (im
 	}
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
-	ctx.SetRGBA(1, 1, 1, 1)
+	ctx.SetRGBA(0, 0, 0, 0)
 	ctx.Fill()
 
 	delaunay := &Delaunay{}
@@ -131,8 +131,7 @@ func (im *Image) Draw(input interface{}, output interface{}, closure func()) (im
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
 		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
-		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
-
+		r, g, b, a := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2], srcImg.Pix[j+3]
 		var strokeColor color.RGBA
 		if im.IsSolid {
 			strokeColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
@@ -142,7 +141,11 @@ func (im *Image) Draw(input interface{}, output interface{}, closure func()) (im
 
 		switch im.Wireframe {
 		case WithoutWireframe:
-			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
+			if a != 0 {
+				ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
+			} else {
+				ctx.SetHexColor("#ffffff00")
+			}
 			ctx.FillPreserve()
 			ctx.Fill()
 		case WithWireframe:
