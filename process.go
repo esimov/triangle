@@ -76,7 +76,7 @@ type Drawer interface {
 // Draw is an interface method which triangulates the source type and outputs the result even to an image or a pixel array.
 // The input could be an image file or a pixel array. This is the reason why interface is used as argument type.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (im *Image) Draw(input interface{}, output interface{}, closure func()) (image.Image, []Triangle, []Point, error) {
+func (im *Image) Draw(input interface{}, output interface{}, callback func()) (image.Image, []Triangle, []Point, error) {
 	var (
 		err    error
 		src    interface{}
@@ -190,13 +190,13 @@ func (im *Image) Draw(input interface{}, output interface{}, closure func()) (im
 	default:
 		return newImg, nil, nil, nil
 	}
-	closure()
+	callback()
 	return newImg, triangles, points, err
 }
 
 // Draw triangulate the source image and output the result to an SVG file.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) (image.Image, []Triangle, []Point, error) {
+func (svg *SVG) Draw(input io.Reader, output io.Writer, callback func()) (image.Image, []Triangle, []Point, error) {
 	const SVGTemplate = `<?xml version="1.0" ?>
 	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
 	  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
@@ -288,8 +288,8 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, closure func()) (image.I
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
-	// Call the closure function after the generation is completed.
-	closure()
+	// Trigger the callback function after the generation is completed.
+	callback()
 	return nil, triangles, points, err
 }
 
