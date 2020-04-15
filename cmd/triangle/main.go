@@ -30,28 +30,29 @@ const (
 // version indicates the current build version.
 var version string
 
-var (
-	// Command line flags
-	source          = flag.String("in", "", "Source")
-	destination     = flag.String("out", "", "Destination")
-	blurRadius      = flag.Int("blur", 4, "Blur radius")
-	sobelThreshold  = flag.Int("sobel", 10, "Sobel filter threshold")
-	pointsThreshold = flag.Int("points", 20, "Points threshold")
-	maxPoints       = flag.Int("max", 2500, "Maximum number of points")
-	wireframe       = flag.Int("wireframe", 0, "Wireframe mode")
-	noise           = flag.Int("noise", 0, "Noise factor")
-	strokeWidth     = flag.Float64("stroke", 1, "Stroke width")
-	isSolid         = flag.Bool("solid", false, "Solid line color")
-	grayscale       = flag.Bool("gray", false, "Convert to grayscale")
-	outputInWeb     = flag.Bool("web", false, "Output SVG in browser")
-)
-
 func main() {
 	var (
+		// Command line flags
+		source          = flag.String("in", "", "Source")
+		destination     = flag.String("out", "", "Destination")
+		blurRadius      = flag.Int("blur", 4, "Blur radius")
+		sobelThreshold  = flag.Int("sobel", 10, "Sobel filter threshold")
+		pointsThreshold = flag.Int("points", 20, "Points threshold")
+		maxPoints       = flag.Int("max", 2500, "Maximum number of points")
+		wireframe       = flag.Int("wireframe", 0, "Wireframe mode")
+		noise           = flag.Int("noise", 0, "Noise factor")
+		strokeWidth     = flag.Float64("stroke", 1, "Stroke width")
+		isSolid         = flag.Bool("solid", false, "Solid line color")
+		grayscale       = flag.Bool("gray", false, "Convert to grayscale")
+		outputInWeb     = flag.Bool("web", false, "Output SVG in browser")
+		backgroundColor = flag.String("bg", "", "Background color")
+
+		// Triangle related variables
 		triangles []triangle.Triangle
 		points    []triangle.Point
 		err       error
 	)
+
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, fmt.Sprintf(helperBanner, version))
 		flag.PrintDefaults()
@@ -80,6 +81,7 @@ func main() {
 		IsSolid:         *isSolid,
 		Grayscale:       *grayscale,
 		OutputInWeb:     *outputInWeb,
+		BackgroundColor: *backgroundColor,
 	}
 
 	switch mode := fs.Mode(); {

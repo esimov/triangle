@@ -35,6 +35,7 @@ type Processor struct {
 	Grayscale       bool
 	OutputToSVG     bool
 	OutputInWeb     bool
+	BackgroundColor string
 }
 
 // Line defines the SVG line parameters.
@@ -143,20 +144,28 @@ func (im *Image) Draw(input interface{}, output interface{}, closure func()) (im
 		case WithoutWireframe:
 			if a != 0 {
 				ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
-			} else {
-				ctx.SetHexColor("#ffffff00")
+			} else if im.BackgroundColor != "" {
+				ctx.SetHexColor(im.BackgroundColor)
 			}
 			ctx.FillPreserve()
 			ctx.Fill()
 		case WithWireframe:
-			ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
-			ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R: 0, G: 0, B: 0, A: 20}))
+			if a != 0 {
+				ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
+				ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R: 0, G: 0, B: 0, A: 20}))
+			} else if im.BackgroundColor != "" {
+				ctx.SetHexColor(im.BackgroundColor)
+			}
 			ctx.SetLineWidth(im.StrokeWidth)
 			ctx.FillPreserve()
 			ctx.StrokePreserve()
 			ctx.Stroke()
 		case WireframeOnly:
-			ctx.SetStrokeStyle(gg.NewSolidPattern(strokeColor))
+			if a != 0 {
+				ctx.SetStrokeStyle(gg.NewSolidPattern(strokeColor))
+			} else if im.BackgroundColor != "" {
+				ctx.SetHexColor(im.BackgroundColor)
+			}
 			ctx.SetLineWidth(im.StrokeWidth)
 			ctx.StrokePreserve()
 			ctx.Stroke()
