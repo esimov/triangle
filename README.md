@@ -59,6 +59,10 @@ The following flags are supported:
 | `stroke` | 1 | Stroke width |
 | `gray` | false | Convert to grayscale |
 | `web` | false | Output SVG in browser |
+| `bg` | ' ' | Background color |
+
+#### Background color
+You can specify a background color in case of (`.png`) images with a transparent background by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
 
 #### Output as image or SVG
 By default the output is saved to an image file, but you can export the resulted vertices even to an SVG file. The CLI tool can recognize the output type directly from the file extension. This is a handy addition for those who wish to generate large images without guality loss.
