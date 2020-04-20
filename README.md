@@ -4,8 +4,8 @@
 [![Build Status](https://travis-ci.org/esimov/triangle.svg?branch=master)](https://travis-ci.org/esimov/triangle)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/esimov/triangle)
 [![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
-[![release](https://img.shields.io/badge/release-v1.0.4-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.0.4)
-[![homebrew](https://img.shields.io/badge/homebrew-v1.0.4-orange.svg)](https://github.com/esimov/homebrew-triangle)
+[![release](https://img.shields.io/badge/release-v1.0.5-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.0.5)
+[![homebrew](https://img.shields.io/badge/homebrew-v1.0.5-orange.svg)](https://github.com/esimov/homebrew-triangle)
 
 Triangle is a tool to generate image arts with [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes an input image and converts it to an abstract image composed of tiles of triangles.
 
@@ -59,6 +59,10 @@ The following flags are supported:
 | `stroke` | 1 | Stroke width |
 | `gray` | false | Convert to grayscale |
 | `web` | false | Output SVG in browser |
+| `bg` | ' ' | Background color |
+
+#### Background color
+You can specify a background color in case of (`.png`) images with a transparent background by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
 
 #### Output as image or SVG
 By default the output is saved to an image file, but you can export the resulted vertices even to an SVG file. The CLI tool can recognize the output type directly from the file extension. This is a handy addition for those who wish to generate large images without guality loss.
