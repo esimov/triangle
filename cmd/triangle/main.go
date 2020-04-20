@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/esimov/triangle"
-	_ "golang.org/x/image/webp"
 )
 
 const helperBanner = `
@@ -36,7 +35,7 @@ func main() {
 		// Command line flags
 		source          = flag.String("in", "", "Source")
 		destination     = flag.String("out", "", "Destination")
-		blurRadius      = flag.Int("blur", 6, "Blur radius")
+		blurRadius      = flag.Int("blur", 4, "Blur radius")
 		sobelThreshold  = flag.Int("sobel", 10, "Sobel filter threshold")
 		pointsThreshold = flag.Int("points", 20, "Points threshold")
 		maxPoints       = flag.Int("max", 2500, "Maximum number of points")

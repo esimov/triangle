@@ -7,7 +7,3 @@ github.com/golang/freetype/truetype
 golang.org/x/image/font
 golang.org/x/image/font/basicfont
 golang.org/x/image/math/fixed
-golang.org/x/image/riff
-golang.org/x/image/vp8
-golang.org/x/image/vp8l
-golang.org/x/image/webp
