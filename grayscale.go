@@ -11,7 +11,11 @@ func Grayscale(src *image.NRGBA) *image.NRGBA {
 	dst := image.NewNRGBA(src.Bounds())
 	for x := 0; x < dx; x++ {
 		for y := 0; y < dy; y++ {
-			r, g, b, _ := src.At(x, y).RGBA()
+			r, g, b, a := src.At(x, y).RGBA()
+			// check for swapped color channel order
+			if r == 0 {
+				r = a
+			}
 			lum := float32(r)*0.299 + float32(g)*0.587 + float32(b)*0.114
 			pixel := color.Gray{uint8(lum / 256)}
 			dst.Set(x, y, pixel)
