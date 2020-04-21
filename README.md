@@ -82,15 +82,15 @@ $ triangle -in samples/input.jpg -out output.svg -web=true
 You can transform even multiple images from a specific folder with a single command by declaring as `-in` flag the source folder and as `-out` flag the destination folder.
 
 ```bash
-$ triangle -in ./samples/ -out ./ouput -wireframe=0 -pts=3500 -stroke=2 -blur=2 -noise=4
+$ triangle -in ./samples/ -out ./ouput -wf=0 -pts=3500 -stroke=2 -blur=2 -noise=4
 ```
 ### Tweaks
 Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, generating a more artistic, grainy image.
 
 Here are some examples you can experiment with:
 ```bash
-$ triangle -in samples/input.jpg -out output.png -wireframe=0 -pts=3500 -stroke=2 -blur=2
-$ triangle -in samples/input.jpg -out output.png -wireframe=2 -pts=5500 -stroke=1 -blur=10
+$ triangle -in samples/input.jpg -out output.png -wf=0 -pts=3500 -stroke=2 -blur=2
+$ triangle -in samples/input.jpg -out output.png -wf=2 -pts=5500 -stroke=1 -blur=10
 ```
 
 ### Examples
