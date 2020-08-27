@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/esimov/triangle.svg?branch=master)](https://travis-ci.org/esimov/triangle)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/esimov/triangle)
 [![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
-[![release](https://img.shields.io/badge/release-v1.1.0-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.1.0)
+[![release](https://img.shields.io/badge/release-v1.1.1-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.1.1)
 [![homebrew](https://img.shields.io/badge/homebrew-v1.1.0-orange.svg)](https://github.com/esimov/homebrew-triangle)
 
 Triangle is a tool to generate image arts with [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes an input image and converts it to an abstract image composed of tiles of triangles.
@@ -50,12 +50,12 @@ The following flags are supported:
 | `in` | n/a | Input file |
 | `out` | n/a | Output file |
 | `blur` | 4 | Blur radius |
-| `max` | 2500 | Maximum number of points |
+| `pts` | 2500 | Maximum number of points |
 | `noise` | 0 | Noise factor |
-| `points` | 20 | Points threshold |
+| `th` | 20 | Points threshold |
 | `sobel` | 10 | Sobel filter threshold |
 | `solid` | false | Solid line color |
-| `wireframe` | 0 | Wireframe mode (without,with,both) |
+| `wf` | 0 | Wireframe mode (without,with,both) |
 | `stroke` | 1 | Stroke width |
 | `gray` | false | Convert to grayscale |
 | `web` | false | Output SVG in browser |
@@ -82,23 +82,23 @@ $ triangle -in samples/input.jpg -out output.svg -web=true
 You can transform even multiple images from a specific folder with a single command by declaring as `-in` flag the source folder and as `-out` flag the destination folder.
 
 ```bash
-$ triangle -in ./samples/ -out ./ouput -wireframe=0 -max=3500 -stroke=2 -blur=2 -noise=4
+$ triangle -in ./samples/ -out ./ouput -wf=0 -pts=3500 -stroke=2 -blur=2 -noise=4
 ```
 ### Tweaks
 Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, generating a more artistic, grainy image.
 
 Here are some examples you can experiment with:
 ```bash
-$ triangle -in samples/input.jpg -out output.png -wireframe=0 -max=3500 -stroke=2 -blur=2
-$ triangle -in samples/input.jpg -out output.png -wireframe=2 -max=5500 -stroke=1 -blur=10
+$ triangle -in samples/input.jpg -out output.png -wf=0 -pts=3500 -stroke=2 -blur=2
+$ triangle -in samples/input.jpg -out output.png -wf=2 -pts=5500 -stroke=1 -blur=10
 ```
 
 ### Examples
 
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_3.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_3.png" width=420/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_4.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_4.png" width=420/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_5.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_5.png" width=420/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_6.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_6.png" width=420/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_3.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_3.png" width=410/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_4.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_4.png" width=410/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_5.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_5.png" width=410/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_6.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_6.png" width=410/></a>
 ![Sample_0](https://github.com/esimov/triangle/blob/master/output/sample_0.png)
 ![Sample_1](https://github.com/esimov/triangle/blob/master/output/sample_1.png)
 ![Sample_11](https://github.com/esimov/triangle/blob/master/output/sample_11.png)
