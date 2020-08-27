@@ -84,11 +84,16 @@ func main() {
 		BackgroundColor: *backgroundColor,
 	}
 
+	// Supported image files.
+	extensions := []string{".jpg", ".png"}
+
+	ext := filepath.Ext(*destination)
+	if !inSlice(ext, extensions) {
+		log.Fatalf("File type not supported: %v", ext)
+	}
+
 	switch mode := fs.Mode(); {
 	case mode.IsDir():
-		// Supported image files.
-		extensions := []string{".jpg", ".png"}
-
 		// Read source directory.
 		files, err := ioutil.ReadDir(*source)
 		if err != nil {
@@ -104,7 +109,6 @@ func main() {
 		// Check if the image destination is a directory or a file.
 		if dst.Mode().IsRegular() {
 			log.Fatal("Please specify a directory as destination!")
-			os.Exit(2)
 		}
 		output, err := filepath.Abs(*destination)
 		if err != nil {
@@ -252,4 +256,14 @@ func (s *spinner) start(message string) {
 // Stop process
 func (s *spinner) stop() {
 	s.stopChan <- struct{}{}
+}
+
+// inSlice checks if the item exists in the slice.
+func inSlice(item string, slice []string) bool {
+	for _, it := range slice {
+		if it == item {
+			return true
+		}
+	}
+	return false
 }

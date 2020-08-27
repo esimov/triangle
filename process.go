@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/jpeg"
 	"image/png"
 	"io"
 	"os"
+	"path/filepath"
 	"text/template"
 
 	"github.com/fogleman/gg"
@@ -101,7 +103,12 @@ func (im *Image) Draw(input interface{}, output interface{}, callback func()) (i
 	}
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
-	ctx.SetRGBA(0, 0, 0, 0)
+	if im.BackgroundColor != "" {
+		ctx.SetRGBA(1, 1, 1, 1)
+	} else {
+		ctx.SetRGBA(0, 0, 0, 0)
+	}
+
 	ctx.Fill()
 
 	delaunay := &Delaunay{}
@@ -178,17 +185,22 @@ func (im *Image) Draw(input interface{}, output interface{}, callback func()) (i
 	case *os.File:
 		// Apply a noise on the final image. This will give it a more artistic look.
 		if im.Noise > 0 {
-			noisyImg := Noise(im.Noise, newImg, newImg.Bounds().Dx(), newImg.Bounds().Dy())
-			if err = png.Encode(output.(io.Writer), noisyImg); err != nil {
+			newImg = Noise(im.Noise, newImg, newImg.Bounds().Dx(), newImg.Bounds().Dy())
+		}
+
+		ext := filepath.Ext(output.(*os.File).Name())
+		switch ext {
+		case "", ".jpg", ".jpeg":
+			if err = jpeg.Encode(output.(io.Writer), newImg, &jpeg.Options{Quality: 100}); err != nil {
 				return nil, nil, nil, err
 			}
-		} else {
+		case ".png":
 			if err = png.Encode(output.(io.Writer), newImg); err != nil {
 				return nil, nil, nil, err
 			}
+		default:
+			return nil, nil, nil, errors.New("unsupported image format")
 		}
-	default:
-		return newImg, nil, nil, nil
 	}
 	callback()
 	return newImg, triangles, points, err
