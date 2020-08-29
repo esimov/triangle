@@ -78,8 +78,11 @@ Using with `-web` flag you can access the generated svg file directly on the web
 $ triangle -in samples/input.jpg -out output.svg -web=true
 ```
 
+#### Supported output types
+The following output types are supported: `.jpg`, `.jpg`, `.png`, `.svg`.
+
 ### Multiple image processing with a single command
-You can transform even multiple images from a specific folder with a single command by declaring as `-in` flag the source folder and as `-out` flag the destination folder.
+You can transform even multiple images from a specific folder with a single command by providing the source folder for the `-in` flag and the destination folder for the `-out` flag.
 
 ```bash
 $ triangle -in ./samples/ -out ./ouput -wf=0 -pts=3500 -stroke=2 -blur=2 -noise=4
