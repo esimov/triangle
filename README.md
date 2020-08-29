@@ -79,7 +79,7 @@ $ triangle -in samples/input.jpg -out output.svg -web=true
 ```
 
 #### Supported output types
-The following output types are supported: `.jpg`, `.jpg`, `.png`, `.svg`.
+The following output types are supported: `.jpg`, `.jpeg`, `.png`, `.svg`.
 
 ### Multiple image processing with a single command
 You can transform even multiple images from a specific folder with a single command by providing the source folder for the `-in` flag and the destination folder for the `-out` flag.
