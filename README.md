@@ -7,14 +7,14 @@
 [![release](https://img.shields.io/badge/release-v1.1.1-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.1.1)
 [![homebrew](https://img.shields.io/badge/homebrew-v1.1.0-orange.svg)](https://github.com/esimov/homebrew-triangle)
 
-Triangle is a tool to generate image arts with [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes an input image and converts it to an abstract image composed of tiles of triangles.
+Triangle is a tool to generate triangulated image using [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes a source image and converts it to an abstract image composed of tiles of triangles.
 
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
 
-### The technique
-* First the image is blured out to smothen the sharp pixel edges. The more blured an image is the more diffused the generated output will be.
+### The process
+* First the image is blured out to smothen sharp pixel edges. The more blured an image is the more diffused the generated output will be.
 * Second the resulted image is converted to grayscale mode. 
-* Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulting image.
+* Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulted image.
 * Lastly the delaunay algorithm is applied on the pixels obtained from the previous step.
 
 ```go
@@ -62,7 +62,7 @@ The following flags are supported:
 | `bg` | ' ' | Background color |
 
 #### Background color
-You can specify a background color in case of (`.png`) images with a transparent background by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
+You can specify a background color in case of images with a transparent background (`.png`) by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
 
 #### Output as image or SVG
 By default the output is saved to an image file, but you can export the resulted vertices even to an SVG file. The CLI tool can recognize the output type directly from the file extension. This is a handy addition for those who wish to generate large images without guality loss.
