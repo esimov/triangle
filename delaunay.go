@@ -39,12 +39,12 @@ func (n Node) isEq(p Node) bool {
 
 // Edge struct having as component the node list.
 type edge struct {
-	nodes []Node
+	nodes [2]Node
 }
 
 // newEdge creates a new edge.
-func newEdge(p0, p1 Node) []Node {
-	nodes := []Node{p0, p1}
+func newEdge(p0, p1 Node) [2]Node {
+	nodes := [...]Node{p0, p1}
 	return nodes
 }
 
