@@ -90,12 +90,12 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 }
 
 // getImageData groups pixels into a 2D array, each one containing the pixel's RGB value.
-func getImageData(img *image.NRGBA) [][]uint8 {
+func getImageData(img *image.NRGBA) [][4]uint8 {
 	dx, dy := img.Bounds().Max.X, img.Bounds().Max.Y
-	pixels := make([][]uint8, dx*dy*4)
+	pixels := make([][4]uint8, dx*dy*4)
 
 	for i := 0; i < len(pixels); i += 4 {
-		pixels[i/4] = []uint8{
+		pixels[i/4] = [...]uint8{
 			img.Pix[i],
 			img.Pix[i+1],
 			img.Pix[i+2],
