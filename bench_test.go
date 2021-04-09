@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"image"
 	_ "image/png"
-	"os"
+	"io/ioutil"
 	"testing"
 )
 
 func BenchmarkDraw(b *testing.B) {
-	buf, err := os.ReadFile("./output//sample_0.png")
+	buf, err := ioutil.ReadFile("./output/sample_0.png")
 	if err != nil {
 		b.Skipf("Failed opening test file: %v", err)
 	}
