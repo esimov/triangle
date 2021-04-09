@@ -147,8 +147,8 @@ func (d *Delaunay) Insert(points []Point) *Delaunay {
 		y = points[k].y
 
 		triangles := d.triangles
-		edges = nil
-		temps = nil
+		edges = edges[:0]
+		temps = temps[:0]
 
 		for i = 0; i < len(d.triangles); i++ {
 			t := triangles[i]
