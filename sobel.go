@@ -32,18 +32,16 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	maxPixelOffset := dx*2 + len(kernelX) - 1
 
 	data := getImageData(img)
-	length := len(data) - maxPixelOffset
-	magnitudes := make([]int32, length)
+	length := len(data)*4 - maxPixelOffset
+	magnitudes := make([]uint8, length)
 
 	for i := 0; i < length; i++ {
 		// Sum each pixel with the kernel value
 		sumX, sumY = 0, 0
 		for x := 0; x < len(kernelX); x++ {
 			for y := 0; y < len(kernelY); y++ {
-				px := data[i+(dx*y)+x]
-				if len(px) > 0 {
-					r := px[0]
-					// We are using px[0] (i.e. R value) because the image is grayscale anyway
+				if idx := i + (dx * y) + x; idx < len(data) {
+					r := data[i+(dx*y)+x]
 					sumX += int32(r) * kernelX[y][x]
 					sumY += int32(r) * kernelY[y][x]
 				}
@@ -59,7 +57,7 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 
 		// Set magnitude to 0 if doesn't exceed threshold, else set to magnitude
 		if magnitude > threshold {
-			magnitudes[i] = int32(magnitude)
+			magnitudes[i] = uint8(magnitude)
 		} else {
 			magnitudes[i] = 0
 		}
@@ -74,7 +72,7 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 		if i%4 != 0 {
 			m := magnitudes[i/4]
 			if m != 0 {
-				edges[i-1] = m
+				edges[i-1] = int32(m)
 			}
 		}
 	}
@@ -89,18 +87,14 @@ func SobelFilter(img *image.NRGBA, threshold float64) *image.NRGBA {
 	return dst
 }
 
-// getImageData groups pixels into a 2D array, each one containing the pixel's RGB value.
-func getImageData(img *image.NRGBA) [][4]uint8 {
+// getImageData returns an array of pixel grayscale brightness values
+// for the image (taking the red component of each pixel).
+func getImageData(img *image.NRGBA) []uint8 {
 	dx, dy := img.Bounds().Max.X, img.Bounds().Max.Y
-	pixels := make([][4]uint8, dx*dy*4)
+	pixels := make([]uint8, dx*dy)
 
-	for i := 0; i < len(pixels); i += 4 {
-		pixels[i/4] = [...]uint8{
-			img.Pix[i],
-			img.Pix[i+1],
-			img.Pix[i+2],
-			img.Pix[i+3],
-		}
+	for i := range pixels {
+		pixels[i] = img.Pix[i*4]
 	}
 	return pixels
 }
