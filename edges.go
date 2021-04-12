@@ -45,7 +45,7 @@ func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int) []Point {
 				sum /= total
 			}
 			if sum > threshold {
-				points = append(points, Point{x: x, y: y})
+				points = append(points, Point{X: x, Y: y})
 			}
 		}
 	}

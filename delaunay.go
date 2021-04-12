@@ -1,9 +1,9 @@
 package triangle
 
+import "image"
+
 // Point defines a struct having as components the point X and Y coordinate position.
-type Point struct {
-	x, y int
-}
+type Point = image.Point
 
 // Node defines a struct having as components the node X and Y coordinate position.
 type Node struct {
@@ -143,8 +143,8 @@ func (d *Delaunay) Insert(points []Point) *Delaunay {
 	)
 
 	for k = 0; k < len(points); k++ {
-		x = points[k].x
-		y = points[k].y
+		x = points[k].X
+		y = points[k].Y
 
 		triangles := d.triangles
 		edges = edges[:0]
