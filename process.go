@@ -112,7 +112,7 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 	ctx.Fill()
 
 	delaunay := &Delaunay{}
-	img := toNRGBA(src.(image.Image))
+	img := ToNRGBA(src.(image.Image))
 
 	blur := StackBlur(img, uint32(im.BlurRadius))
 	gray := Grayscale(blur)
@@ -246,7 +246,7 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, fn func()) (image.Image,
 	ctx.Fill()
 
 	delaunay := &Delaunay{}
-	img := toNRGBA(src)
+	img := ToNRGBA(src)
 
 	blur := StackBlur(img, uint32(svg.BlurRadius))
 	gray := Grayscale(blur)
@@ -305,8 +305,8 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, fn func()) (image.Image,
 	return nil, triangles, points, err
 }
 
-// toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
-func toNRGBA(img image.Image) *image.NRGBA {
+// ToNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
+func ToNRGBA(img image.Image) *image.NRGBA {
 	srcBounds := img.Bounds()
 	if srcBounds.Min.X == 0 && srcBounds.Min.Y == 0 {
 		if src0, ok := img.(*image.NRGBA); ok {
