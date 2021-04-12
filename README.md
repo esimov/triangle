@@ -85,7 +85,7 @@ The following output types are supported: `.jpg`, `.jpeg`, `.png`, `.svg`.
 You can transform even multiple images from a specific folder with a single command by providing the source folder for the `-in` flag and the destination folder for the `-out` flag.
 
 ```bash
-$ triangle -in ./samples/ -out ./ouput -wf=0 -pts=3500 -stroke=2 -blur=2 -noise=4
+$ triangle -in ./samples/ -out ./output -wf=0 -pts=3500 -stroke=2 -blur=2 -noise=4
 ```
 ### Tweaks
 Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, generating a more artistic, grainy image.
