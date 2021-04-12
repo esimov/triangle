@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="1.1.1"
+VERSION="1.1.2"
 PROTECTED_MODE="no"
 
 export GO15VENDOREXPERIMENT=1
