@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// Supported image files.
-	extensions := []string{".jpg", ".png"}
+	extensions := []string{".jpg", ".png", ".svg"}
 
 	ext := filepath.Ext(*destination)
 	if !inSlice(ext, extensions) {
