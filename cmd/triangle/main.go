@@ -33,19 +33,19 @@ var version string
 func main() {
 	var (
 		// Command line flags
-		source          = flag.String("in", "", "Source")
-		destination     = flag.String("out", "", "Destination")
+		source          = flag.String("in", "", "Source image")
+		destination     = flag.String("out", "", "Destination image")
 		blurRadius      = flag.Int("blur", 4, "Blur radius")
 		sobelThreshold  = flag.Int("sobel", 10, "Sobel filter threshold")
 		pointsThreshold = flag.Int("th", 20, "Points threshold")
 		maxPoints       = flag.Int("pts", 2500, "Maximum number of points")
-		wireframe       = flag.Int("wf", 0, "Wireframe mode")
+		wireframe       = flag.Int("wf", 0, "Wireframe mode (0: without stroke, 1: with stroke, 2: stroke only)")
 		noise           = flag.Int("noise", 0, "Noise factor")
 		strokeWidth     = flag.Float64("stroke", 1, "Stroke width")
-		isSolid         = flag.Bool("solid", false, "Solid line color")
-		grayscale       = flag.Bool("gray", false, "Convert to grayscale")
-		outputInWeb     = flag.Bool("web", false, "Output SVG in browser")
-		backgroundColor = flag.String("bg", "", "Background color")
+		isStrokeSolid   = flag.Bool("solid", false, "Use solid stroke color (yes/no)")
+		grayscale       = flag.Bool("gray", false, "Output in grayscale mode")
+		showInBrowser   = flag.Bool("web", false, "Open the SVG file in the web browser")
+		bgColor         = flag.String("bg", "", "Background color (specified as hex value)")
 
 		// Triangle related variables
 		triangles []triangle.Triangle
@@ -78,10 +78,10 @@ func main() {
 		Wireframe:       *wireframe,
 		Noise:           *noise,
 		StrokeWidth:     *strokeWidth,
-		IsSolid:         *isSolid,
+		IsStrokeSolid:   *isStrokeSolid,
 		Grayscale:       *grayscale,
-		OutputInWeb:     *outputInWeb,
-		BackgroundColor: *backgroundColor,
+		ShowInBrowser:   *showInBrowser,
+		BgColor:         *bgColor,
 	}
 
 	// Supported image files.
@@ -168,7 +168,7 @@ func main() {
 		}
 
 		if filepath.Ext(out) == ".svg" {
-			if p.OutputInWeb {
+			if p.ShowInBrowser {
 				if len(toProcess) < 2 {
 					_, triangles, points, err = svg.Draw(file, fq, func() {
 						svg, err := os.OpenFile(out, os.O_CREATE|os.O_RDWR, 0755)

@@ -33,11 +33,11 @@ type Processor struct {
 	Wireframe       int
 	Noise           int
 	StrokeWidth     float64
-	IsSolid         bool
+	IsStrokeSolid   bool
 	Grayscale       bool
 	OutputToSVG     bool
-	OutputInWeb     bool
-	BackgroundColor string
+	ShowInBrowser   bool
+	BgColor         string
 }
 
 // Line defines the SVG line parameters.
@@ -103,7 +103,7 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 	}
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
-	if im.BackgroundColor != "" {
+	if im.BgColor != "" {
 		ctx.SetRGBA(1, 1, 1, 1)
 	} else {
 		ctx.SetRGBA(0, 0, 0, 0)
@@ -141,7 +141,7 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
 		r, g, b, a := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2], srcImg.Pix[j+3]
 		var strokeColor color.RGBA
-		if im.IsSolid {
+		if im.IsStrokeSolid {
 			strokeColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
 		} else {
 			strokeColor = color.RGBA{R: r, G: g, B: b, A: 255}
@@ -151,8 +151,8 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 		case WithoutWireframe:
 			if a != 0 {
 				ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
-			} else if im.BackgroundColor != "" {
-				ctx.SetHexColor(im.BackgroundColor)
+			} else if im.BgColor != "" {
+				ctx.SetHexColor(im.BgColor)
 			}
 			ctx.FillPreserve()
 			ctx.Fill()
@@ -160,8 +160,8 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 			if a != 0 {
 				ctx.SetFillStyle(gg.NewSolidPattern(color.RGBA{R: r, G: g, B: b, A: 255}))
 				ctx.SetStrokeStyle(gg.NewSolidPattern(color.RGBA{R: 0, G: 0, B: 0, A: 20}))
-			} else if im.BackgroundColor != "" {
-				ctx.SetHexColor(im.BackgroundColor)
+			} else if im.BgColor != "" {
+				ctx.SetHexColor(im.BgColor)
 			}
 			ctx.SetLineWidth(im.StrokeWidth)
 			ctx.FillPreserve()
@@ -170,8 +170,8 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 		case WireframeOnly:
 			if a != 0 {
 				ctx.SetStrokeStyle(gg.NewSolidPattern(strokeColor))
-			} else if im.BackgroundColor != "" {
-				ctx.SetHexColor(im.BackgroundColor)
+			} else if im.BgColor != "" {
+				ctx.SetHexColor(im.BgColor)
 			}
 			ctx.SetLineWidth(im.StrokeWidth)
 			ctx.StrokePreserve()
@@ -268,7 +268,7 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, fn func()) (image.Image,
 		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
 		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
 
-		if svg.IsSolid {
+		if svg.IsStrokeSolid {
 			strokeColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
 		} else {
 			strokeColor = color.RGBA{R: r, G: g, B: b, A: 255}
