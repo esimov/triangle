@@ -47,22 +47,22 @@ The following flags are supported:
 
 | Flag | Default | Description |
 | --- | --- | --- |
-| `in` | n/a | Input file |
-| `out` | n/a | Output file |
+| `in` | n/a | Source image |
+| `out` | n/a | Destination image |
 | `blur` | 4 | Blur radius |
 | `pts` | 2500 | Maximum number of points |
 | `noise` | 0 | Noise factor |
 | `th` | 20 | Points threshold |
 | `sobel` | 10 | Sobel filter threshold |
-| `solid` | false | Solid line color |
-| `wf` | 0 | Wireframe mode (without,with,both) |
+| `solid` | false | Use solid stroke color (yes/no) |
+| `wf` | 0 | Wireframe mode (0: without stroke, 1: with stroke, 2: stroke only) |
 | `stroke` | 1 | Stroke width |
-| `gray` | false | Convert to grayscale |
-| `web` | false | Output SVG in browser |
-| `bg` | ' ' | Background color |
+| `gray` | false | Output in grayscale mode |
+| `web` | false | Open the SVG file in the web browser |
+| `bg` | ' ' | Background color (specified as hex value) |
 
 #### Background color
-You can specify a background color in case of images with a transparent background (`.png`) by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
+You can specify a background color in case of transparent background images (`.png`) by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
 
 #### Output as image or SVG
 By default the output is saved to an image file, but you can export the resulted vertices even to an SVG file. The CLI tool can recognize the output type directly from the file extension. This is a handy addition for those who wish to generate large images without guality loss.
