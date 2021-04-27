@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"github.com/fogleman/gg"
+	"golang.org/x/image/bmp"
 )
 
 const (
@@ -196,6 +197,10 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 			}
 		case ".png":
 			if err = png.Encode(output.(io.Writer), newImg); err != nil {
+				return nil, nil, nil, err
+			}
+		case ".bmp":
+			if err = bmp.Encode(output.(io.Writer), newImg); err != nil {
 				return nil, nil, nil, err
 			}
 		default:

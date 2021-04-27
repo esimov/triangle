@@ -21,10 +21,18 @@ const helperBanner = `
 
 `
 const (
-	httpAddress     = "localhost:8080"
+	httpAddress     = "http://localhost:8080"
 	errorMsgColor   = "\x1b[0;31m"
 	successMsgColor = "\x1b[0;32m"
 	defaultMsgColor = "\x1b[0m"
+)
+
+type MessageType int
+
+const (
+	DefaultMessage MessageType = iota
+	SuccessMessage
+	ErrorMessage
 )
 
 // version indicates the current build version.
@@ -60,12 +68,15 @@ func main() {
 	flag.Parse()
 
 	if len(*source) == 0 || len(*destination) == 0 {
-		log.Fatal("Usage: triangle -in input.jpg -out out.jpg")
+		log.Fatal("Usage: triangle -in <source> -out <destination>")
 	}
 
 	fs, err := os.Stat(*source)
 	if err != nil {
-		log.Fatalf("Unable to open source: %v", err)
+		log.Fatalf(
+			decorateText("Failed to load the source image: %v", ErrorMessage),
+			decorateText(err.Error(), DefaultMessage),
+		)
 	}
 
 	toProcess := make(map[string]string)
@@ -84,42 +95,43 @@ func main() {
 		BgColor:         *bgColor,
 	}
 
-	// Supported image files.
-	extensions := []string{".jpg", ".png", ".svg"}
+	// Supported input image file types.
+	srcExts := []string{".jpg", ".jpeg", ".png"}
 
-	ext := filepath.Ext(*destination)
-	if !inSlice(ext, extensions) {
-		log.Fatalf("File type not supported: %v", ext)
-	}
+	// Supported output image file types.
+	destExts := []string{".jpg", ".jpeg", ".png", ".svg"}
 
 	switch mode := fs.Mode(); {
 	case mode.IsDir():
 		// Read source directory.
 		files, err := ioutil.ReadDir(*source)
 		if err != nil {
-			log.Fatalf("Unable to read dir: %v", err)
+			log.Fatalf("Unable to read directory: %v", err)
 		}
 
 		// Read destination file or directory.
 		dst, err := os.Stat(*destination)
 		if err != nil {
-			log.Fatalf("Unable to get dir stats: %v", err)
+			log.Fatalf(
+				decorateText("Unable to get dir stats: %v", ErrorMessage),
+				decorateText(err.Error(), DefaultMessage),
+			)
 		}
 
 		// Check if the image destination is a directory or a file.
 		if dst.Mode().IsRegular() {
-			log.Fatal("Please specify a directory as destination!")
+			log.Fatalf(decorateText("Please specify a directory as destination!.", ErrorMessage))
 		}
 		output, err := filepath.Abs(*destination)
 		if err != nil {
-			log.Fatalf("Unable to get absolute path: %v", err)
+			log.Fatalf("Unable to get the absolute path: %v", err)
 		}
 
 		// Range over all the image files and save them into a slice.
 		images := []string{}
 		for _, f := range files {
 			ext := filepath.Ext(f.Name())
-			for _, iex := range extensions {
+			for _, iex := range srcExts {
 				if ext == iex {
 					images = append(images, f.Name())
 				}
@@ -138,12 +150,16 @@ func main() {
 		}
 
 	case mode.IsRegular():
+		ext := filepath.Ext(*destination)
+		if !inSlice(ext, destExts) {
+			log.Fatalf(decorateText(fmt.Sprintf("File type not supported: %v", ext), ErrorMessage))
+		}
 		toProcess[*source] = *destination
 	}
 
 	for in, out := range toProcess {
 		svg := &triangle.SVG{
-			Title:         "Delaunay image triangulator",
+			Title:         "Image triangulator",
 			Lines:         []triangle.Line{},
 			Description:   "Convert images to computer generated art using delaunay triangulation.",
 			StrokeWidth:   p.StrokeWidth,
@@ -155,7 +171,7 @@ func main() {
 
 		file, err := os.Open(in)
 		if err != nil {
-			log.Fatalf("Unable to open source file: %v", err)
+			log.Fatalf("Unable to open the source file: %v", err)
 		}
 
 		s := new(spinner)
@@ -164,7 +180,7 @@ func main() {
 
 		fq, err := os.Create(out)
 		if err != nil {
-			log.Fatalf("Unable to create the output file: %v", err)
+			log.Fatalf("Unable to create the destination file: %v", err)
 		}
 
 		if filepath.Ext(out) == ".svg" {
@@ -173,14 +189,14 @@ func main() {
 					_, triangles, points, err = svg.Draw(file, fq, func() {
 						svg, err := os.OpenFile(out, os.O_CREATE|os.O_RDWR, 0755)
 						if err != nil {
-							log.Fatalf("Unable to open output file: %v", err)
+							log.Fatalf("Unable to open the destination file: %v", err)
 						}
 
 						b, err := ioutil.ReadAll(svg)
 						if err != nil {
-							log.Fatalf("Unable to read svg file: %v", err)
+							log.Fatalf("Unable to read the SVG file: %v", err)
 						}
-						fmt.Printf("\n\rAceess the generated image on the following url: http://%s ", httpAddress)
+						fmt.Printf("\n\tYou can access the generated image under the following url: %s ", decorateText(httpAddress, SuccessMessage))
 						s.stop()
 
 						handler := func(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +204,7 @@ func main() {
 							w.Write(b)
 						}
 						http.HandleFunc("/", handler)
-						log.Fatal(http.ListenAndServe(httpAddress, nil))
+						log.Fatal(http.ListenAndServe(strings.TrimPrefix(httpAddress, "http://"), nil))
 					})
 				} else {
 					log.Fatal("Web browser command is supported only for a single file processing.")
@@ -204,25 +220,25 @@ func main() {
 		s.stop()
 
 		if err == nil {
-			fmt.Printf("\nGenerated in: %s\n", decorateText(fmt.Sprintf("%.2fs", time.Since(start).Seconds()), "success"))
-			fmt.Printf(fmt.Sprintf("%sTotal number of %s%d %striangles generated out of %s%d %spoints\n",
-				defaultMsgColor, successMsgColor, len(triangles), defaultMsgColor, successMsgColor, len(points), defaultMsgColor))
+			fmt.Printf("\nGenerated in: %s\n", decorateText(fmt.Sprintf("%.2fs", time.Since(start).Seconds()), SuccessMessage))
+			fmt.Printf(fmt.Sprintf("%sTotal number of %s%d %striangles generated out of %s%d %vpoints\n",
+				defaultMsgColor, successMsgColor, len(triangles), defaultMsgColor, successMsgColor, len(points), DefaultMessage))
 			fmt.Printf(fmt.Sprintf("Saved on: %s %s✓\n\n", fq.Name(), successMsgColor))
 		} else {
-			fmt.Printf(decorateText(fmt.Sprintf("\nError on generating the triangulated image: %s \n\tReason: %s", file.Name(), err.Error()), "error"))
+			fmt.Printf(decorateText(fmt.Sprintf("\nError generating the triangulated image: %s \n\tReason: %s\n", file.Name(), err.Error()), ErrorMessage))
 		}
 		file.Close()
 	}
 }
 
-// decorateText changes the color of a string
-func decorateText(s string, color string) string {
-	switch color {
-	case "success":
+// decorateText show the message types in different colors
+func decorateText(s string, msgType MessageType) string {
+	switch msgType {
+	case SuccessMessage:
 		s = successMsgColor + s
-	case "error":
+	case ErrorMessage:
 		s = errorMsgColor + s
-	case "default":
+	case DefaultMessage:
 		s = defaultMsgColor + s
 	default:
 		return s
