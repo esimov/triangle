@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,9 +10,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/esimov/triangle"
+	"github.com/esimov/triangle/utils"
 )
 
 const helperBanner = `
@@ -20,15 +23,20 @@ const helperBanner = `
      Version: %s
 
 `
-const (
-	httpAddress     = "http://localhost:8080"
-	errorMsgColor   = "\x1b[0;31m"
-	successMsgColor = "\x1b[0;32m"
-	defaultMsgColor = "\x1b[0m"
-)
+
+// The default http address used for accessing the generated SVG file in case of -web flag is used.
+const httpAddress = "http://localhost:8080"
 
 type MessageType int
 
+type result struct {
+	path      string
+	triangles []triangle.Triangle
+	points    []triangle.Point
+	err       error
+}
+
+// The message types used accross the CLI application.
 const (
 	DefaultMessage MessageType = iota
 	SuccessMessage
@@ -54,11 +62,6 @@ func main() {
 		grayscale       = flag.Bool("gray", false, "Output in grayscale mode")
 		showInBrowser   = flag.Bool("web", false, "Open the SVG file in the web browser")
 		bgColor         = flag.String("bg", "", "Background color (specified as hex value)")
-
-		// Triangle related variables
-		triangles []triangle.Triangle
-		points    []triangle.Point
-		err       error
 	)
 
 	flag.Usage = func() {
@@ -78,8 +81,6 @@ func main() {
 			decorateText(err.Error(), DefaultMessage),
 		)
 	}
-
-	toProcess := make(map[string]string)
 
 	p := &triangle.Processor{
 		BlurRadius:      *blurRadius,
@@ -101,8 +102,14 @@ func main() {
 	// Supported output image file types.
 	destExts := []string{".jpg", ".jpeg", ".png", ".svg"}
 
+	s := new(utils.Spinner)
+	s.Start("Generating the triangulated image...")
+	start := time.Now()
+
 	switch mode := fs.Mode(); {
 	case mode.IsDir():
+		var wg sync.WaitGroup
+
 		// Read source directory.
 		files, err := ioutil.ReadDir(*source)
 		if err != nil {
@@ -118,35 +125,39 @@ func main() {
 			)
 		}
 
+		//@TODO create destination directory in case it does not exists.
+
 		// Check if the image destination is a directory or a file.
 		if dst.Mode().IsRegular() {
 			log.Fatalf(decorateText("Please specify a directory as destination!.", ErrorMessage))
 		}
-		output, err := filepath.Abs(*destination)
-		if err != nil {
-			log.Fatalf("Unable to get the absolute path: %v", err)
+
+		// Process image files from directory concurrently.
+		ch := make(chan result)
+		done := make(chan interface{})
+		defer close(done)
+
+		paths, errc := walkDir(done, *source, srcExts)
+
+		wg.Add(len(files))
+		for i := 0; i < len(files); i++ {
+			go func() {
+				defer wg.Done()
+				consumer(done, paths, *destination, p, ch)
+			}()
 		}
 
-		// Range over all the image files and save them into a slice.
-		images := []string{}
-		for _, f := range files {
-			ext := filepath.Ext(f.Name())
-			for _, iex := range srcExts {
-				if ext == iex {
-					images = append(images, f.Name())
-				}
-			}
+		go func() {
+			defer close(ch)
+			wg.Wait()
+		}()
+
+		for res := range ch {
+			showProcessStatus(res.path, res.triangles, res.points, res.err)
 		}
 
-		// Process images from directory.
-		for _, img := range images {
-			// Get the file base name.
-			name := strings.TrimSuffix(img, filepath.Ext(img))
-			dir := strings.TrimRight(*source, "/")
-			out := output + "/" + name + ".png"
-			in := dir + "/" + img
-
-			toProcess[in] = out
+		if err := <-errc; err != nil {
+			fmt.Println(decorateText(err.Error(), ErrorMessage))
 		}
 
 	case mode.IsRegular():
@@ -154,124 +165,180 @@ func main() {
 		if !inSlice(ext, destExts) {
 			log.Fatalf(decorateText(fmt.Sprintf("File type not supported: %v", ext), ErrorMessage))
 		}
-		toProcess[*source] = *destination
-	}
 
-	for in, out := range toProcess {
-		svg := &triangle.SVG{
-			Title:         "Image triangulator",
-			Lines:         []triangle.Line{},
-			Description:   "Convert images to computer generated art using delaunay triangulation.",
-			StrokeWidth:   p.StrokeWidth,
-			StrokeLineCap: "round", //butt, round, square
-			Processor:     *p,
-		}
-
-		tri := &triangle.Image{*p}
-
-		file, err := os.Open(in)
-		if err != nil {
-			log.Fatalf("Unable to open the source file: %v", err)
-		}
-
-		s := new(spinner)
-		s.start("Generating triangulated image...")
-		start := time.Now()
-
-		fq, err := os.Create(out)
-		if err != nil {
-			log.Fatalf("Unable to create the destination file: %v", err)
-		}
-
-		if filepath.Ext(out) == ".svg" {
+		triangles, points, err := processor(*source, *destination, p, func() {
 			if p.ShowInBrowser {
-				if len(toProcess) < 2 {
-					_, triangles, points, err = svg.Draw(file, fq, func() {
-						svg, err := os.OpenFile(out, os.O_CREATE|os.O_RDWR, 0755)
-						if err != nil {
-							log.Fatalf("Unable to open the destination file: %v", err)
-						}
-
-						b, err := ioutil.ReadAll(svg)
-						if err != nil {
-							log.Fatalf("Unable to read the SVG file: %v", err)
-						}
-						fmt.Printf("\n\tYou can access the generated image under the following url: %s ", decorateText(httpAddress, SuccessMessage))
-						s.stop()
-
-						handler := func(w http.ResponseWriter, r *http.Request) {
-							w.Header().Set("Content-Type", "image/svg+xml")
-							w.Write(b)
-						}
-						http.HandleFunc("/", handler)
-						log.Fatal(http.ListenAndServe(strings.TrimPrefix(httpAddress, "http://"), nil))
-					})
-				} else {
-					log.Fatal("Web browser command is supported only for a single file processing.")
+				svg, err := os.OpenFile(*destination, os.O_CREATE|os.O_RDWR, 0755)
+				if err != nil {
+					log.Fatalf("Unable to open the destination file: %v", err)
 				}
-			} else {
-				_, triangles, points, err = svg.Draw(file, fq, func() {})
-				fq.Close()
+
+				b, err := ioutil.ReadAll(svg)
+				if err != nil {
+					log.Fatalf("Unable to read the SVG file: %v", err)
+				}
+				fmt.Printf("\n\tYou can access the generated image under the following url: %s ", decorateText(httpAddress, SuccessMessage))
+
+				handler := func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "image/svg+xml")
+					w.Write(b)
+				}
+				http.HandleFunc("/", handler)
+				log.Fatal(http.ListenAndServe(strings.TrimPrefix(httpAddress, "http://"), nil))
 			}
-		} else {
-			_, triangles, points, err = tri.Draw(file, fq, func() {})
-			fq.Close()
-		}
-		s.stop()
+		})
 
-		if err == nil {
-			fmt.Printf("\nGenerated in: %s\n", decorateText(fmt.Sprintf("%.2fs", time.Since(start).Seconds()), SuccessMessage))
-			fmt.Printf(fmt.Sprintf("%sTotal number of %s%d %striangles generated out of %s%d %vpoints\n",
-				defaultMsgColor, successMsgColor, len(triangles), defaultMsgColor, successMsgColor, len(points), DefaultMessage))
-			fmt.Printf(fmt.Sprintf("Saved on: %s %s✓\n\n", fq.Name(), successMsgColor))
-		} else {
-			fmt.Printf(decorateText(fmt.Sprintf("\nError generating the triangulated image: %s \n\tReason: %s\n", file.Name(), err.Error()), ErrorMessage))
-		}
-		file.Close()
+		showProcessStatus(*destination, triangles, points, err)
 	}
+
+	procTime := time.Since(start)
+	s.Stop()
+
+	fmt.Printf("Generated in: %s\n", decorateText(fmt.Sprintf("%.2fs", procTime.Seconds()), SuccessMessage))
 }
 
-// decorateText show the message types in different colors
-func decorateText(s string, msgType MessageType) string {
-	switch msgType {
-	case SuccessMessage:
-		s = successMsgColor + s
-	case ErrorMessage:
-		s = errorMsgColor + s
-	case DefaultMessage:
-		s = defaultMsgColor + s
-	default:
-		return s
-	}
-	return s + "\x1b[0m"
-}
-
-type spinner struct {
-	stopChan chan struct{}
-}
-
-// Start process
-func (s *spinner) start(message string) {
-	s.stopChan = make(chan struct{}, 1)
+// walkDir starts a goroutine to walk the specified directory tree
+// and send the path of each regular file on the string channel.
+// It sends the result of the walk on the error channel.
+// It terminates in case done channel is closed.
+func walkDir(
+	done <-chan interface{},
+	src string,
+	srcExts []string,
+) (<-chan string, <-chan error) {
+	pathChan := make(chan string)
+	errChan := make(chan error, 1)
 
 	go func() {
-		for {
-			for _, r := range `-\|/` {
-				select {
-				case <-s.stopChan:
-					return
-				default:
-					fmt.Printf("\r%s%s %c%s", message, successMsgColor, r, defaultMsgColor)
-					time.Sleep(time.Millisecond * 100)
+		// Close the paths channel after Walk returns.
+		defer close(pathChan)
+
+		errChan <- filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+			isFileSupported := false
+			if err != nil {
+				return err
+			}
+			if !info.Mode().IsRegular() {
+				return nil
+			}
+
+			// Get the file base name.
+			fx := filepath.Ext(info.Name())
+			for _, ext := range srcExts {
+				if ext == fx {
+					isFileSupported = true
+					break
 				}
 			}
-		}
+
+			if isFileSupported {
+				select {
+				case <-done:
+					return errors.New("directory walk cancelled")
+				case pathChan <- path:
+				}
+			}
+			return nil
+		})
 	}()
+	return pathChan, errChan
 }
 
-// Stop process
-func (s *spinner) stop() {
-	s.stopChan <- struct{}{}
+// consumer reads the path names from the paths channel and
+// calls the triangulator processor against the source image,
+// then sends the results on a new channel.
+func consumer(
+	done <-chan interface{},
+	paths <-chan string,
+	dest string,
+	proc *triangle.Processor,
+	res chan<- result,
+) {
+	for path := range paths {
+		dest := filepath.Join(dest, filepath.Base(path))
+		triangles, points, err := processor(path, dest, proc, func() {})
+
+		select {
+		case <-done:
+			return
+		case res <- result{
+			path:      path,
+			triangles: triangles,
+			points:    points,
+			err:       err,
+		}:
+		}
+	}
+}
+
+// processor triangulates the source image and returns the number
+// of triangles, points and the error in case it exists.
+func processor(src, dst string, proc *triangle.Processor, fn func()) (
+	[]triangle.Triangle,
+	[]triangle.Point,
+	error,
+) {
+	var (
+		// Triangle related variables
+		triangles []triangle.Triangle
+		points    []triangle.Point
+		err       error
+	)
+
+	svg := &triangle.SVG{
+		Title:         "Image triangulator",
+		Lines:         []triangle.Line{},
+		Description:   "Convert images to computer generated art using delaunay triangulation.",
+		StrokeWidth:   proc.StrokeWidth,
+		StrokeLineCap: "round", //butt, round, square
+		Processor:     *proc,
+	}
+
+	tri := &triangle.Image{*proc}
+
+	file, err := os.Open(src)
+	if err != nil {
+		log.Fatalf("Unable to open the source file: %v", err)
+	}
+	defer file.Close()
+
+	fs, err := os.Create(dst)
+	if err != nil {
+		log.Fatalf("Unable to create the destination file: %v", err)
+	}
+	defer fs.Close()
+
+	if filepath.Ext(dst) == ".svg" {
+		_, triangles, points, err = svg.Draw(file, fs, fn)
+	} else {
+		_, triangles, points, err = tri.Draw(file, fs, fn)
+	}
+
+	return triangles, points, err
+}
+
+// showProcessStatus displays the relavant information about the triangulation process.
+func showProcessStatus(
+	fn string,
+	triangles []triangle.Triangle,
+	points []triangle.Point,
+	err error,
+) {
+	if err != nil {
+		fmt.Printf(
+			decorateText("\nError generating the triangulated image: %s", ErrorMessage),
+			decorateText(fmt.Sprintf("\n\tReason: %v\n", err.Error()), DefaultMessage),
+		)
+	} else {
+		fmt.Printf(fmt.Sprintf("\nTotal number of %s%d %striangles generated out of %s%d %vpoints\n",
+			utils.SuccessColor, len(triangles), utils.DefaultColor, utils.SuccessColor, len(points), utils.DefaultColor),
+		)
+		fmt.Printf(fmt.Sprintf("Saved as: %s %s✓%s\n\n",
+			decorateText(filepath.Base(fn), SuccessMessage),
+			utils.SuccessColor,
+			utils.DefaultColor,
+		))
+	}
 }
 
 // inSlice checks if the item exists in the slice.
@@ -282,4 +349,19 @@ func inSlice(item string, slice []string) bool {
 		}
 	}
 	return false
+}
+
+// decorateText show the message types in different colors
+func decorateText(s string, msgType MessageType) string {
+	switch msgType {
+	case SuccessMessage:
+		s = utils.SuccessColor + s
+	case ErrorMessage:
+		s = utils.ErrorColor + s
+	case DefaultMessage:
+		s = utils.DefaultColor + s
+	default:
+		return s
+	}
+	return s + "\x1b[0m"
 }
