@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -62,6 +63,7 @@ func main() {
 		grayscale       = flag.Bool("gray", false, "Output in grayscale mode")
 		showInBrowser   = flag.Bool("web", false, "Open the SVG file in the web browser")
 		bgColor         = flag.String("bg", "", "Background color (specified as hex value)")
+		workers         = flag.Int("w", runtime.NumCPU(), "Number of files to process concurrently")
 	)
 
 	flag.Usage = func() {
@@ -110,12 +112,6 @@ func main() {
 	case mode.IsDir():
 		var wg sync.WaitGroup
 
-		// Read source directory.
-		files, err := ioutil.ReadDir(*source)
-		if err != nil {
-			log.Fatalf("Unable to read directory: %v", err)
-		}
-
 		// Read destination file or directory.
 		dst, err := os.Stat(*destination)
 		if err != nil {
@@ -139,8 +135,8 @@ func main() {
 
 		paths, errc := walkDir(done, *source, srcExts)
 
-		wg.Add(len(files))
-		for i := 0; i < len(files); i++ {
+		wg.Add(*workers)
+		for i := 0; i < *workers; i++ {
 			go func() {
 				defer wg.Done()
 				consumer(done, paths, *destination, p, ch)
