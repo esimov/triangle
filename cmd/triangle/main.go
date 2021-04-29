@@ -28,14 +28,14 @@ const helperBanner = `
 // The default http address used for accessing the generated SVG file in case of -web flag is used.
 const httpAddress = "http://localhost:8080"
 
-type MessageType int
-
 type result struct {
 	path      string
 	triangles []triangle.Triangle
 	points    []triangle.Point
 	err       error
 }
+
+type MessageType int
 
 // The message types used accross the CLI application.
 const (
@@ -113,19 +113,15 @@ func main() {
 		var wg sync.WaitGroup
 
 		// Read destination file or directory.
-		dst, err := os.Stat(*destination)
+		_, err := os.Stat(*destination)
 		if err != nil {
-			log.Fatalf(
-				decorateText("Unable to get dir stats: %v", ErrorMessage),
-				decorateText(err.Error(), DefaultMessage),
-			)
-		}
-
-		//@TODO create destination directory in case it does not exists.
-
-		// Check if the image destination is a directory or a file.
-		if dst.Mode().IsRegular() {
-			log.Fatalf(decorateText("Please specify a directory as destination!.", ErrorMessage))
+			err = os.Mkdir(*destination, 0755)
+			if err != nil {
+				log.Fatalf(
+					decorateText("Unable to get dir stats: %v\n", ErrorMessage),
+					decorateText(err.Error(), DefaultMessage),
+				)
+			}
 		}
 
 		// Process image files from directory concurrently.
@@ -148,6 +144,7 @@ func main() {
 			wg.Wait()
 		}()
 
+		// Consume the channel values
 		for res := range ch {
 			showProcessStatus(res.path, res.triangles, res.points, res.err)
 		}
@@ -190,7 +187,7 @@ func main() {
 	procTime := time.Since(start)
 	s.Stop()
 
-	fmt.Printf("Generated in: %s\n", decorateText(fmt.Sprintf("%.2fs", procTime.Seconds()), SuccessMessage))
+	fmt.Printf("Finished in: %s\n", decorateText(fmt.Sprintf("%.2fs", procTime.Seconds()), SuccessMessage))
 }
 
 // walkDir starts a goroutine to walk the specified directory tree
