@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/esimov/triangle.svg?branch=master)](https://travis-ci.org/esimov/triangle)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/esimov/triangle)
 [![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
-[![release](https://img.shields.io/badge/release-v1.1.2-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.1.2)
+[![release](https://img.shields.io/badge/release-v1.2.0-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.2.0)
 [![homebrew](https://img.shields.io/badge/homebrew-v1.1.2-orange.svg)](https://github.com/esimov/homebrew-triangle)
 
 **▲ Triangle** is a tool to generate triangulated image using [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes a source image and converts it to an abstract image composed of tiles of triangles.
@@ -60,6 +60,7 @@ The following flags are supported:
 | `gray` | false | Output in grayscale mode |
 | `web` | false | Open the SVG file in the web browser |
 | `bg` | ' ' | Background color (specified as hex value) |
+| `w` | system spec. | Number of files to process concurrently (workers)
 
 #### Background color
 You can specify a background color in case of transparent background images (`.png`) by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
@@ -81,11 +82,11 @@ $ triangle -in samples/input.jpg -out output.svg -web=true
 #### Supported output types
 The following output types are supported: `.jpg`, `.jpeg`, `.png`, `.svg`.
 
-### Multiple image processing with a single command
-You can transform even multiple images from a specific folder with a single command by providing the source folder for the `-in` flag and the destination folder for the `-out` flag.
+### Process multiple images from a directory concurrently
+The CLI tool also let you process multiple images from a directory **concurrently**. You only need to provide the source and the destination folder by using the `-in` and `-out` flags.
 
 ```bash
-$ triangle -in ./samples/ -out ./output -wf=0 -pts=3500 -stroke=2 -blur=2 -noise=4
+$ triangle -in <input_folder> -out <output-folder>
 ```
 ### Tweaks
 Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, generating a more artistic, grainy image.

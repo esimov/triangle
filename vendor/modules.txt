@@ -4,6 +4,7 @@ github.com/fogleman/gg
 github.com/golang/freetype/raster
 github.com/golang/freetype/truetype
 # golang.org/x/image v0.0.0-20171214225156-12117c17ca67
+golang.org/x/image/bmp
 golang.org/x/image/font
 golang.org/x/image/font/basicfont
 golang.org/x/image/math/fixed
