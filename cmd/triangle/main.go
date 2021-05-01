@@ -44,6 +44,8 @@ const (
 	ErrorMessage
 )
 
+var webImage *os.File
+
 // version indicates the current build version.
 var version string
 
@@ -64,6 +66,11 @@ func main() {
 		showInBrowser   = flag.Bool("web", false, "Open the SVG file in the web browser")
 		bgColor         = flag.String("bg", "", "Background color (specified as hex value)")
 		workers         = flag.Int("w", runtime.NumCPU(), "Number of files to process concurrently")
+		isWebImage      = flag.Bool("http", false, "Download image from the web")
+
+		// Files related variables
+		fs  os.FileInfo
+		err error
 	)
 
 	flag.Usage = func() {
@@ -74,14 +81,6 @@ func main() {
 
 	if len(*source) == 0 || len(*destination) == 0 {
 		log.Fatal("Usage: triangle -in <source> -out <destination>")
-	}
-
-	fs, err := os.Stat(*source)
-	if err != nil {
-		log.Fatalf(
-			decorateText("Failed to load the source image: %v", ErrorMessage),
-			decorateText(err.Error(), DefaultMessage),
-		)
 	}
 
 	p := &triangle.Processor{
@@ -96,6 +95,7 @@ func main() {
 		Grayscale:       *grayscale,
 		ShowInBrowser:   *showInBrowser,
 		BgColor:         *bgColor,
+		IsWebImage:      *isWebImage,
 	}
 
 	// Supported input image file types.
@@ -104,7 +104,37 @@ func main() {
 	// Supported output image file types.
 	destExts := []string{".jpg", ".jpeg", ".png", ".svg"}
 
-	s := new(utils.Spinner)
+	if p.IsWebImage {
+		src, err := utils.DownloadImage(*source)
+		if err != nil {
+			log.Fatalf(
+				decorateText("Failed to load the source image: %v", ErrorMessage),
+				decorateText(err.Error(), DefaultMessage),
+			)
+		}
+		img, err := os.Open(src.Name())
+		if err != nil {
+			log.Fatalf(
+				decorateText("Unable to open the temporary image file: %v", ErrorMessage),
+				decorateText(err.Error(), DefaultMessage),
+			)
+		}
+		webImage = img
+
+		defer src.Close()
+		defer os.Remove(src.Name())
+		fs, err = src.Stat()
+	} else {
+		fs, err = os.Stat(*source)
+		if err != nil {
+			log.Fatalf(
+				decorateText("Failed to load the source image: %v", ErrorMessage),
+				decorateText(err.Error(), DefaultMessage),
+			)
+		}
+	}
+
+	s := utils.NewSpinner()
 	s.Start("Generating the triangulated image...")
 	start := time.Now()
 
@@ -264,9 +294,36 @@ func consumer(
 	}
 }
 
+// pathToFile converts the source and destination paths to readable and writable files.
+func pathToFile(in, out string, proc *triangle.Processor) (*os.File, *os.File, error) {
+	var (
+		src *os.File
+		err error
+	)
+	if proc.IsWebImage {
+		src = webImage
+	} else {
+		src, err = os.Open(in)
+	}
+	if err != nil {
+		return nil, nil, errors.New(
+			fmt.Sprintf("unable to open the source file: %v", err),
+		)
+	}
+
+	dst, err := os.Create(out)
+	if err != nil {
+		return nil, nil, errors.New(
+			fmt.Sprintf("unable to create the destination file: %v", err),
+		)
+	}
+
+	return src, dst, err
+}
+
 // processor triangulates the source image and returns the number
 // of triangles, points and the error in case it exists.
-func processor(src, dst string, proc *triangle.Processor, fn func()) (
+func processor(in, out string, proc *triangle.Processor, fn func()) (
 	[]triangle.Triangle,
 	[]triangle.Point,
 	error,
@@ -278,33 +335,25 @@ func processor(src, dst string, proc *triangle.Processor, fn func()) (
 		err       error
 	)
 
-	svg := &triangle.SVG{
-		Title:         "Image triangulator",
-		Lines:         []triangle.Line{},
-		Description:   "Convert images to computer generated art using delaunay triangulation.",
-		StrokeWidth:   proc.StrokeWidth,
-		StrokeLineCap: "round", //butt, round, square
-		Processor:     *proc,
-	}
+	src, dst, err := pathToFile(in, out, proc)
+	defer dst.Close()
+	defer src.Close()
 
-	tri := &triangle.Image{*proc}
-
-	file, err := os.Open(src)
-	if err != nil {
-		log.Fatalf("Unable to open the source file: %v", err)
-	}
-	defer file.Close()
-
-	fs, err := os.Create(dst)
-	if err != nil {
-		log.Fatalf("Unable to create the destination file: %v", err)
-	}
-	defer fs.Close()
-
-	if filepath.Ext(dst) == ".svg" {
-		_, triangles, points, err = svg.Draw(file, fs, fn)
+	if filepath.Ext(out) == ".svg" {
+		svg := &triangle.SVG{
+			Title:         "Image triangulator",
+			Lines:         []triangle.Line{},
+			Description:   "Convert images to computer generated art using delaunay triangulation.",
+			StrokeWidth:   proc.StrokeWidth,
+			StrokeLineCap: "round", //butt, round, square
+			Processor:     *proc,
+		}
+		_, triangles, points, err = svg.Draw(src, dst, fn)
 	} else {
-		_, triangles, points, err = tri.Draw(file, fs, fn)
+		tri := &triangle.Image{
+			Processor: *proc,
+		}
+		_, triangles, points, err = tri.Draw(src, dst, fn)
 	}
 
 	return triangles, points, err

@@ -18,6 +18,11 @@ type Spinner struct {
 	mu       sync.Mutex
 }
 
+// NewSpinner instantiates a new Spinner struct.
+func NewSpinner() *Spinner {
+	return &Spinner{}
+}
+
 // Start starts the process indicator.
 func (s *Spinner) Start(message string) {
 	s.stopChan = make(chan struct{}, 1)

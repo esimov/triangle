@@ -38,6 +38,7 @@ type Processor struct {
 	Grayscale       bool
 	OutputToSVG     bool
 	ShowInBrowser   bool
+	IsWebImage      bool
 	BgColor         string
 }
 
@@ -97,7 +98,6 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 	}
 
 	width, height := src.(image.Image).Bounds().Dx(), src.(image.Image).Bounds().Dy()
-
 	if width <= 1 || height <= 1 {
 		err := errors.New("The image width and height must be greater than 1px.\n")
 		return nil, nil, nil, err
