@@ -34,7 +34,7 @@ triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 - [x] There is no need to specify the file type, the CLI tool can recognize automatically the input and output file type.
 - [x] Possibility to save the generated image as an **SGV** file.
 - [x] The generated SVG file can be accessed from the Web browser directly.  
-- [x] Clean and intuitive API. The core methods not only accepts image files but can work even with image data. This means that these methods can be invoked even on data streams. Check this [demo](https://github.com/esimov/pigo-wasm-demos#face-triangulator) for reference.
+- [x] Clean and intuitive API. The core method responsible with the image triangulation not only that accepts image files but can also work with image data. This means that the `Draw` method can be invoked even on data streams. Check this [demo](https://github.com/esimov/pigo-wasm-demos#face-triangulator) for reference.
 
 #### Features to be implemented
 - [ ] Pipe commands
