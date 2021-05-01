@@ -176,6 +176,7 @@ func main() {
 			}()
 		}
 
+		// close the channel after the values flowing through the channel are consumed.
 		go func() {
 			defer close(ch)
 			wg.Wait()
