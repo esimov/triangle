@@ -38,7 +38,6 @@ type Processor struct {
 	Grayscale       bool
 	OutputToSVG     bool
 	ShowInBrowser   bool
-	IsWebImage      bool
 	BgColor         string
 }
 

@@ -7,10 +7,11 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 )
 
-//
+// DownloadImage downloads the image obtained from the net and saves it into a temporary file.
 func DownloadImage(url string) (*os.File, error) {
 	// Retrieve the url and decode the response body.
 	res, err := http.Get(url)
@@ -35,4 +36,19 @@ func DownloadImage(url string) (*os.File, error) {
 		return nil, errors.New(fmt.Sprintf("unable to copy the source URI into the destination file"))
 	}
 	return tmpfile, nil
+}
+
+// IsValidUrl tests a string to determine if it is a well-structured url or not.
+func IsValidUrl(uri string) bool {
+	_, err := url.ParseRequestURI(uri)
+	if err != nil {
+		return false
+	}
+
+	u, err := url.Parse(uri)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return false
+	}
+
+	return true
 }

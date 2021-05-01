@@ -28,6 +28,9 @@ const helperBanner = `
 // The default http address used for accessing the generated SVG file in case of -web flag is used.
 const httpAddress = "http://localhost:8080"
 
+// Maximum number of concurrently running workers.
+const maxWorkers = 20
+
 type result struct {
 	path      string
 	triangles []triangle.Triangle
@@ -44,7 +47,7 @@ const (
 	ErrorMessage
 )
 
-var webImage *os.File
+var imgurl *os.File
 
 // version indicates the current build version.
 var version string
@@ -65,10 +68,9 @@ func main() {
 		grayscale       = flag.Bool("gray", false, "Output in grayscale mode")
 		showInBrowser   = flag.Bool("web", false, "Open the SVG file in the web browser")
 		bgColor         = flag.String("bg", "", "Background color (specified as hex value)")
-		workers         = flag.Int("w", runtime.NumCPU(), "Number of files to process concurrently")
-		isWebImage      = flag.Bool("http", false, "Download image from the web")
+		workers         = flag.Int("c", runtime.NumCPU(), "Number of files to process concurrently")
 
-		// Files related variables
+		// File related variables
 		fs  os.FileInfo
 		err error
 	)
@@ -95,7 +97,6 @@ func main() {
 		Grayscale:       *grayscale,
 		ShowInBrowser:   *showInBrowser,
 		BgColor:         *bgColor,
-		IsWebImage:      *isWebImage,
 	}
 
 	// Supported input image file types.
@@ -104,8 +105,13 @@ func main() {
 	// Supported output image file types.
 	destExts := []string{".jpg", ".jpeg", ".png", ".svg"}
 
-	if p.IsWebImage {
+	// Check if source path is a local image or URL.
+	if utils.IsValidUrl(*source) {
 		src, err := utils.DownloadImage(*source)
+		defer src.Close()
+		defer os.Remove(src.Name())
+
+		fs, err = src.Stat()
 		if err != nil {
 			log.Fatalf(
 				decorateText("Failed to load the source image: %v", ErrorMessage),
@@ -119,11 +125,7 @@ func main() {
 				decorateText(err.Error(), DefaultMessage),
 			)
 		}
-		webImage = img
-
-		defer src.Close()
-		defer os.Remove(src.Name())
-		fs, err = src.Stat()
+		imgurl = img
 	} else {
 		fs, err = os.Stat(*source)
 		if err != nil {
@@ -154,6 +156,11 @@ func main() {
 			}
 		}
 
+		// Limit the concurrently running workers number.
+		if *workers <= 0 || *workers > maxWorkers {
+			*workers = runtime.NumCPU()
+		}
+
 		// Process image files from directory concurrently.
 		ch := make(chan result)
 		done := make(chan interface{})
@@ -174,7 +181,7 @@ func main() {
 			wg.Wait()
 		}()
 
-		// Consume the channel values
+		// Consume the channel values.
 		for res := range ch {
 			showProcessStatus(res.path, res.triangles, res.points, res.err)
 		}
@@ -300,8 +307,9 @@ func pathToFile(in, out string, proc *triangle.Processor) (*os.File, *os.File, e
 		src *os.File
 		err error
 	)
-	if proc.IsWebImage {
-		src = webImage
+	// Check if the source path is a local image or URL.
+	if utils.IsValidUrl(in) {
+		src = imgurl
 	} else {
 		src, err = os.Open(in)
 	}
@@ -393,7 +401,7 @@ func inSlice(item string, slice []string) bool {
 	return false
 }
 
-// decorateText show the message types in different colors
+// decorateText shows the message types in different colors.
 func decorateText(s string, msgType MessageType) string {
 	switch msgType {
 	case SuccessMessage:

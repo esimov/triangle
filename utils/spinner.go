@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"sync"
 	"time"
 )
 
@@ -15,7 +14,6 @@ const (
 // Spinner initializes the process indicator.
 type Spinner struct {
 	stopChan chan struct{}
-	mu       sync.Mutex
 }
 
 // NewSpinner instantiates a new Spinner struct.
