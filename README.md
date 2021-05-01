@@ -4,8 +4,8 @@
 [![Build Status](https://travis-ci.org/esimov/triangle.svg?branch=master)](https://travis-ci.org/esimov/triangle)
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/esimov/triangle)
 [![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
-[![release](https://img.shields.io/badge/release-v1.2.0-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.2.0)
-[![homebrew](https://img.shields.io/badge/homebrew-v1.1.2-orange.svg)](https://github.com/esimov/homebrew-triangle)
+[![release](https://img.shields.io/badge/release-v1.2.1-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.2.1)
+[![homebrew](https://img.shields.io/badge/homebrew-v1.2.0-orange.svg)]
 
 **▲ Triangle** is a tool to generate triangulated image using [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes a source image and converts it to an abstract image composed of tiles of triangles.
 
@@ -25,6 +25,21 @@ points = tri.GetEdgePoints(sobel, *pointsThreshold, *maxPoints)
 
 triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 ```
+
+## Features
+
+#### Features implemented
+- [x] Can process whole directories concurrently.
+- [x] Supports various image types.
+- [x] There is no need to specify the file type, the CLI tool can recognize automatically the input and output file type.
+- [x] Possibility to save the generated image as an **SGV** file.
+- [x] The generated SVG file can be accessed from the Web browser directly.  
+- [x] Clean and intuitive API. The core methods not only accepts image files but can work even with image data. This means that these methods can be invoked even on data streams. Check this [demo](https://github.com/esimov/pigo-wasm-demos#face-triangulator) for reference.
+
+#### Features to be implemented
+- [ ] Pipe commands
+
+
 ## Installation and usage
 ```bash
 $ go get -u -f github.com/esimov/triangle/cmd/triangle
@@ -59,7 +74,7 @@ The following flags are supported:
 | `gray` | false | Output in grayscale mode |
 | `web` | false | Open the SVG file in the web browser |
 | `bg` | ' ' | Background color (specified as hex value) |
-| `w` | system spec. | Number of files to process concurrently (workers)
+| `c` | system spec. | Number of files to process concurrently (workers)
 
 #### Background color
 You can specify a background color in case of transparent background images (`.png`) by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
