@@ -31,6 +31,7 @@ const httpAddress = "http://localhost:8080"
 // Maximum number of concurrently running workers.
 const maxWorkers = 20
 
+// result holds the relevant information about the triangulation process and the image generated.
 type result struct {
 	path      string
 	triangles []triangle.Triangle

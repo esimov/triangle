@@ -13,7 +13,7 @@
 
 ### The process
 * First the image is blured out to smothen sharp pixel edges. The more blured an image is the more diffused the generated output will be.
-* Second the resulted image is converted to grayscale mode. 
+* Second the resulted image is converted to grayscale mode.
 * Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulted image.
 * Lastly the delaunay algorithm is applied on the pixels obtained from the previous step.
 
@@ -29,11 +29,11 @@ triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 ## Features
 
 #### Features implemented
-- [x] Can process whole directories concurrently.
+- [x] Can process recursively whole directories and subdirectories concurrently.
 - [x] Supports various image types.
 - [x] There is no need to specify the file type, the CLI tool can recognize automatically the input and output file type.
 - [x] Possibility to save the generated image as an **SGV** file.
-- [x] The generated SVG file can be accessed from the Web browser directly.  
+- [x] The generated SVG file can be accessed from the Web browser directly.
 - [x] Clean and intuitive API. The core method responsible with the image triangulation not only that accepts image files but can also work with image data. This means that the `Draw` method can be invoked even on data streams. Check this [demo](https://github.com/esimov/pigo-wasm-demos#face-triangulator) for reference.
 
 #### Features to be implemented
