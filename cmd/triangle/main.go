@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/esimov/triangle"
 	"github.com/esimov/triangle/utils"
+	"golang.org/x/term"
 )
 
 const helperBanner = `
@@ -25,13 +27,16 @@ const helperBanner = `
 
 `
 
+// pipeName is the file name that indicates stdin/stdout is being used.
+const pipeName = "-"
+
 // The default http address used for accessing the generated SVG file in case of -web flag is used.
 const httpAddress = "http://localhost:8080"
 
 // Maximum number of concurrently running workers.
 const maxWorkers = 20
 
-// result holds the relevant information about the triangulation process and the image generated.
+// result holds the relevant information about the triangulation process and the generated image.
 type result struct {
 	path      string
 	triangles []triangle.Triangle
@@ -46,6 +51,7 @@ const (
 	DefaultMessage MessageType = iota
 	SuccessMessage
 	ErrorMessage
+	TriangleMessage
 )
 
 var imgurl *os.File
@@ -56,8 +62,8 @@ var version string
 func main() {
 	var (
 		// Command line flags
-		source          = flag.String("in", "", "Source image")
-		destination     = flag.String("out", "", "Destination image")
+		source          = flag.String("in", pipeName, "Source image")
+		destination     = flag.String("out", pipeName, "Destination image")
 		blurRadius      = flag.Int("blur", 4, "Blur radius")
 		sobelThreshold  = flag.Int("sobel", 10, "Sobel filter threshold")
 		pointsThreshold = flag.Int("th", 20, "Points threshold")
@@ -74,6 +80,8 @@ func main() {
 		// File related variables
 		fs  os.FileInfo
 		err error
+
+		flagsCheck bool
 	)
 
 	flag.Usage = func() {
@@ -81,10 +89,6 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-
-	if len(*source) == 0 || len(*destination) == 0 {
-		log.Fatal("Usage: triangle -in <source> -out <destination>")
-	}
 
 	p := &triangle.Processor{
 		BlurRadius:      *blurRadius,
@@ -128,7 +132,12 @@ func main() {
 		}
 		imgurl = img
 	} else {
-		fs, err = os.Stat(*source)
+		// Check if the source is a pipe name or a regular file.
+		if *source == pipeName {
+			fs, err = os.Stdin.Stat()
+		} else {
+			fs, err = os.Stat(*source)
+		}
 		if err != nil {
 			log.Fatalf(
 				decorateText("Failed to load the source image: %v", ErrorMessage),
@@ -138,7 +147,10 @@ func main() {
 	}
 
 	s := utils.NewSpinner()
-	s.Start("Generating the triangulated image...")
+	s.Start(fmt.Sprintf("%s %s",
+		decorateText("▲ TRIANGLE", TriangleMessage),
+		decorateText("is generating the triangulated image...", DefaultMessage)),
+	)
 	start := time.Now()
 
 	switch mode := fs.Mode(); {
@@ -157,12 +169,12 @@ func main() {
 			}
 		}
 
-		// Limit the concurrently running workers number.
+		// Limit to maxWorkers the concurrently running workers.
 		if *workers <= 0 || *workers > maxWorkers {
 			*workers = runtime.NumCPU()
 		}
 
-		// Process image files from directory concurrently.
+		// Process recursively the image files from the specified directory concurrently.
 		ch := make(chan result)
 		done := make(chan interface{})
 		defer close(done)
@@ -177,7 +189,7 @@ func main() {
 			}()
 		}
 
-		// close the channel after the values flowing through the channel are consumed.
+		// Close the channel after the values are consumed.
 		go func() {
 			defer close(ch)
 			wg.Wait()
@@ -189,12 +201,12 @@ func main() {
 		}
 
 		if err := <-errc; err != nil {
-			fmt.Println(decorateText(err.Error(), ErrorMessage))
+			fmt.Fprintf(os.Stdout, decorateText(err.Error(), ErrorMessage))
 		}
 
-	case mode.IsRegular():
+	case mode.IsRegular() || mode&os.ModeNamedPipe != 0: // check for regular files or pipe commands
 		ext := filepath.Ext(*destination)
-		if !inSlice(ext, destExts) {
+		if !inSlice(ext, destExts) && *destination != pipeName {
 			log.Fatalf(decorateText(fmt.Sprintf("File type not supported: %v", ext), ErrorMessage))
 		}
 
@@ -209,7 +221,7 @@ func main() {
 				if err != nil {
 					log.Fatalf("Unable to read the SVG file: %v", err)
 				}
-				fmt.Printf("\n\tYou can access the generated image under the following url: %s ", decorateText(httpAddress, SuccessMessage))
+				fmt.Fprintf(os.Stderr, "\n\tYou can access the generated image under the following url: %s ", decorateText(httpAddress, SuccessMessage))
 
 				handler := func(w http.ResponseWriter, r *http.Request) {
 					w.Header().Set("Content-Type", "image/svg+xml")
@@ -219,6 +231,7 @@ func main() {
 				log.Fatal(http.ListenAndServe(strings.TrimPrefix(httpAddress, "http://"), nil))
 			}
 		})
+		flagsCheck = true
 
 		showProcessStatus(*destination, triangles, points, err)
 	}
@@ -226,7 +239,11 @@ func main() {
 	procTime := time.Since(start)
 	s.Stop()
 
-	fmt.Printf("Finished in: %s\n", decorateText(fmt.Sprintf("%.2fs", procTime.Seconds()), SuccessMessage))
+	if len(os.Args) <= 1 && !flagsCheck {
+		log.Fatal("Usage: triangle -in <source> -out <destination>")
+	}
+
+	fmt.Fprintf(os.Stdout, "Finished in: %s\n", decorateText(fmt.Sprintf("%.2fs", procTime.Seconds()), SuccessMessage))
 }
 
 // walkDir starts a goroutine to walk the specified directory tree
@@ -277,7 +294,7 @@ func walkDir(
 }
 
 // consumer reads the path names from the paths channel and
-// calls the triangulator processor against the source image,
+// calls the triangulator processor against the source image
 // then sends the results on a new channel.
 func consumer(
 	done <-chan interface{},
@@ -303,36 +320,8 @@ func consumer(
 	}
 }
 
-// pathToFile converts the source and destination paths to readable and writable files.
-func pathToFile(in, out string, proc *triangle.Processor) (*os.File, *os.File, error) {
-	var (
-		src *os.File
-		err error
-	)
-	// Check if the source path is a local image or URL.
-	if utils.IsValidUrl(in) {
-		src = imgurl
-	} else {
-		src, err = os.Open(in)
-	}
-	if err != nil {
-		return nil, nil, errors.New(
-			fmt.Sprintf("unable to open the source file: %v", err),
-		)
-	}
-
-	dst, err := os.Create(out)
-	if err != nil {
-		return nil, nil, errors.New(
-			fmt.Sprintf("unable to create the destination file: %v", err),
-		)
-	}
-
-	return src, dst, err
-}
-
 // processor triangulates the source image and returns the number
-// of triangles, points and the error in case it exists.
+// of triangles, points and the error in case if exists.
 func processor(in, out string, proc *triangle.Processor, fn func()) (
 	[]triangle.Triangle,
 	[]triangle.Point,
@@ -346,8 +335,8 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 	)
 
 	src, dst, err := pathToFile(in, out, proc)
-	defer dst.Close()
-	defer src.Close()
+	defer src.(*os.File).Close()
+	defer dst.(*os.File).Close()
 
 	if filepath.Ext(out) == ".svg" {
 		svg := &triangle.SVG{
@@ -369,6 +358,50 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 	return triangles, points, err
 }
 
+// pathToFile converts the source and destination paths to readable and writable files.
+func pathToFile(in, out string, proc *triangle.Processor) (io.Reader, io.Writer, error) {
+	var (
+		src io.Reader
+		dst io.Writer
+		err error
+	)
+	// Check if the source path is a local image or URL.
+	if utils.IsValidUrl(in) {
+		src = imgurl
+	} else {
+		// Check if the source is a pipe file or a regular file.
+		if in == pipeName {
+			if term.IsTerminal(int(os.Stdin.Fd())) {
+				return nil, nil, errors.New("`-` should be used with a pipe for stdin")
+			}
+			src = os.Stdin
+		} else {
+			src, err = os.Open(in)
+			if err != nil {
+				return nil, nil, errors.New(
+					fmt.Sprintf("unable to open the source file: %v", err),
+				)
+			}
+		}
+	}
+
+	// Check if the destination is a pipe file or a regular file.
+	if out == pipeName {
+		if term.IsTerminal(int(os.Stdout.Fd())) {
+			return nil, nil, errors.New("`-` should be used with a pipe for stdout")
+		}
+		dst = os.Stdout
+	} else {
+		dst, err = os.OpenFile(out, os.O_CREATE|os.O_WRONLY, 0755)
+		if err != nil {
+			return nil, nil, errors.New(
+				fmt.Sprintf("unable to create the destination file: %v", err),
+			)
+		}
+	}
+	return src, dst, nil
+}
+
 // showProcessStatus displays the relavant information about the triangulation process.
 func showProcessStatus(
 	fn string,
@@ -377,19 +410,21 @@ func showProcessStatus(
 	err error,
 ) {
 	if err != nil {
-		fmt.Printf(
+		fmt.Fprintf(os.Stderr,
 			decorateText("\nError generating the triangulated image: %s", ErrorMessage),
 			decorateText(fmt.Sprintf("\n\tReason: %v\n", err.Error()), DefaultMessage),
 		)
 	} else {
-		fmt.Printf(fmt.Sprintf("\nTotal number of %s%d %striangles generated out of %s%d %vpoints\n",
+		fmt.Fprintf(os.Stderr, fmt.Sprintf("\nTotal number of %s%d %striangles generated out of %s%d %vpoints\n",
 			utils.SuccessColor, len(triangles), utils.DefaultColor, utils.SuccessColor, len(points), utils.DefaultColor),
 		)
-		fmt.Printf(fmt.Sprintf("Saved as: %s %s✓%s\n\n",
-			decorateText(filepath.Base(fn), SuccessMessage),
-			utils.SuccessColor,
-			utils.DefaultColor,
-		))
+		if fn != pipeName {
+			fmt.Fprintf(os.Stderr, fmt.Sprintf("Saved as: %s %s✓%s\n\n",
+				decorateText(filepath.Base(fn), SuccessMessage),
+				utils.SuccessColor,
+				utils.DefaultColor,
+			))
+		}
 	}
 }
 
@@ -406,6 +441,8 @@ func inSlice(item string, slice []string) bool {
 // decorateText shows the message types in different colors.
 func decorateText(s string, msgType MessageType) string {
 	switch msgType {
+	case TriangleMessage:
+		s = utils.TriangleColor + s
 	case SuccessMessage:
 		s = utils.SuccessColor + s
 	case ErrorMessage:

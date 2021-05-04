@@ -2,13 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"time"
-)
-
-const (
-	ErrorColor   = "\x1b[0;31m"
-	SuccessColor = "\x1b[0;32m"
-	DefaultColor = "\x1b[0m"
 )
 
 // Spinner initializes the process indicator.
@@ -32,7 +27,7 @@ func (s *Spinner) Start(message string) {
 				case <-s.stopChan:
 					return
 				default:
-					fmt.Printf("\r%s%s %c%s", message, SuccessColor, r, DefaultColor)
+					fmt.Fprintf(os.Stderr, "\r%s%s %c%s", message, SuccessColor, r, DefaultColor)
 					time.Sleep(time.Millisecond * 100)
 				}
 			}
