@@ -26,19 +26,15 @@ points = tri.GetEdgePoints(sobel, *pointsThreshold, *maxPoints)
 triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 ```
 
-## Features
+### [Features](#key-features)
 
-#### Features implemented
 - [x] Can process recursively whole directories and subdirectories concurrently.
 - [x] Supports various image types.
 - [x] There is no need to specify the file type, the CLI tool can recognize automatically the input and output file type.
 - [x] Possibility to save the generated image as an **SGV** file.
 - [x] The generated SVG file can be accessed from the Web browser directly.
-- [x] Clean and intuitive API. The core method responsible with the image triangulation not only that accepts image files but can also work with image data. This means that the `Draw` method can be invoked even on data streams. Check this [demo](https://github.com/esimov/pigo-wasm-demos#face-triangulator) for reference.
-
-#### Features to be implemented
-- [ ] Pipe commands
-
+- [x] Clean and intuitive API. The core method responsible with the image triangulation not only that accepts image files but can also work with image data. This means that the [`Draw`](https://github.com/esimov/triangle/blob/65672f53a60a6a35f5e85bed69e46e97fe2d2def/process.go#L82) method can be invoked even on data streams. Check this [demo](https://github.com/esimov/pigo-wasm-demos#face-triangulator) for reference.
+- [x] CLI support for pipe commands (possibility to pipe in and pipe out the source and destination image).
 
 ## Installation and usage
 ```bash
@@ -76,6 +72,28 @@ The following flags are supported:
 | `bg` | ' ' | Background color (specified as hex value) |
 | `c` | system spec. | Number of files to process concurrently (workers)
 
+## Key features
+
+
+#### Process multiple images from a directory concurrently
+The CLI tool also let you process multiple images from a directory **concurrently**. You only need to provide the source and the destination folder by using the `-in` and `-out` flags.
+
+```bash
+$ triangle -in <input_folder> -out <output-folder>
+```
+
+#### Pipe commands
+The CLI tool accepts also pipe commands, which means you can use `stdin` and `stdout` without providing a value for the `-in` and `-out` flag directly since these defaults to `-`. For this reason is possible to use `curl` for example to get an image from the web and invoke the triangulation process over it directly without the need to download the image first and call Triangle afterwards.
+
+Here are some useful commands using pipe names:
+```bash
+$ curl <image_url> | triangle > out.jpg
+$ cat input/source.jpg | triangle > out.jpg
+$ triangle -in input/source.jpg > out.jpg
+$ cat input/source.jpg | triangle -out out.jpg
+$ triangle -out out.jpg < input/source.jpg
+```
+
 #### Background color
 You can specify a background color in case of transparent background images (`.png`) by using the `-bg` flag. This flag accepts a hexadecimal string value. For example setting the flag to `-bg=#ffffff00` will set the alpha channel of the resulted image transparent.
 
@@ -88,7 +106,6 @@ $ triangle -in samples/input.jpg -out output.svg
 
 Using with `-web` flag you can access the generated svg file directly on the web browser.
 
-
 ```bash
 $ triangle -in samples/input.jpg -out output.svg -web=true
 ```
@@ -96,12 +113,6 @@ $ triangle -in samples/input.jpg -out output.svg -web=true
 #### Supported output types
 The following output types are supported: `.jpg`, `.jpeg`, `.png`, `.svg`.
 
-### Process multiple images from a directory concurrently
-The CLI tool also let you process multiple images from a directory **concurrently**. You only need to provide the source and the destination folder by using the `-in` and `-out` flags.
-
-```bash
-$ triangle -in <input_folder> -out <output-folder>
-```
 ### Tweaks
 Setting a lower points threshold, the resulted image will be more like a cubic painting. You can even add a noise factor, generating a more artistic, grainy image.
 
