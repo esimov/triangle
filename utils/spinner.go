@@ -11,7 +11,7 @@ type Spinner struct {
 	stopChan chan struct{}
 }
 
-// NewSpinner instantiates a new Spinner struct.
+// NewSpinner instantiates a new process indicator.
 func NewSpinner() *Spinner {
 	return &Spinner{}
 }

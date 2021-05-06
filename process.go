@@ -25,7 +25,7 @@ const (
 	WireframeOnly
 )
 
-// Processor type with processing options
+// Processor encompasses all of the currently supported processing options.
 type Processor struct {
 	BlurRadius      int
 	SobelThreshold  int
@@ -71,13 +71,13 @@ type SVG struct {
 
 // Drawer interface defines the Draw method.
 // This has to be implemented by every struct which declares a Draw method.
-// Using this method the image can be triangulated as raster type or SVG.
+// By using this method the image can be triangulated as raster type or SVG.
 type Drawer interface {
 	Draw(interface{}, io.Writer) ([]Triangle, []Point, error)
 }
 
-// Draw is an interface method which triangulates the source type and outputs the result even to an image or a pixel array.
-// The input could be an image file or a pixel array. This is the reason why interface is used as argument type.
+// Draw is an interface method which triangulates the source type and outputs the result even to an image or a pixel data.
+// The input could be an image file or a pixel data. This is the reason why interface is used as argument type.
 // It returns the number of triangles generated, the number of points and the error in case exists.
 func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.Image, []Triangle, []Point, error) {
 	var (
@@ -101,6 +101,8 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 		err := errors.New("The image width and height must be greater than 1px.\n")
 		return nil, nil, nil, err
 	}
+
+	// Define a new context and fill it with a background color.
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
 	if im.BgColor != "" {
@@ -183,7 +185,7 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 	newImg := ctx.Image()
 	switch output.(type) {
 	case *os.File:
-		// Apply a noise on the final image. This will give it a more artistic look.
+		// Apply a noise on the final image.
 		if im.Noise > 0 {
 			newImg = Noise(im.Noise, newImg, newImg.Bounds().Dx(), newImg.Bounds().Dy())
 		}
@@ -210,7 +212,10 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 	return newImg, triangles, points, err
 }
 
-// Draw triangulate the source image and output the result to an SVG file.
+// Draw triangulates the source image and outputs the result to an SVG file.
+// It has the same method signature as the rester Draw method, only that accepts a callback function
+// for further processing, like opening the generated SVG file in the web browser.
+// Everyone can define it's own callback function, depending on each one personal needs.
 // It returns the number of triangles generated, the number of points and the error in case exists.
 func (svg *SVG) Draw(input io.Reader, output io.Writer, fn func()) (image.Image, []Triangle, []Point, error) {
 	const SVGTemplate = `<?xml version="1.0" ?>
