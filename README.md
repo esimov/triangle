@@ -7,7 +7,7 @@
 [![release](https://img.shields.io/badge/release-v1.2.2-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.2.2)
 ![homebrew](https://img.shields.io/badge/homebrew-v1.2.2-orange.svg)
 
-**▲ Triangle** is a tool to generate triangulated image using [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes a source image and converts it to an abstract image composed of tiles of triangles.
+**▲ Triangle** is a tool for generating triangulated image using [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes a source image and converts it to an abstract image composed of tiles of triangles.
 
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
 
