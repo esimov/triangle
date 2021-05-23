@@ -33,7 +33,7 @@ const pipeName = "-"
 // The default http address used for accessing the generated SVG file in case of -web flag is used.
 const httpAddress = "http://localhost:8080"
 
-// Maximum number of concurrently running workers.
+// maxWorkers sets the maximum number of concurrently running workers.
 const maxWorkers = 20
 
 // result holds the relevant information about the triangulation process and the generated image.
@@ -145,12 +145,7 @@ func main() {
 			)
 		}
 	}
-
-	s := utils.NewSpinner()
-	s.Start(fmt.Sprintf("%s %s",
-		decorateText("▲ TRIANGLE", TriangleMessage),
-		decorateText("is generating the triangulated image...", DefaultMessage)),
-	)
+	// start counting the execution time.
 	start := time.Now()
 
 	switch mode := fs.Mode(); {
@@ -169,7 +164,7 @@ func main() {
 			}
 		}
 
-		// Limit to maxWorkers the concurrently running workers.
+		// Limit the concurrently running workers to maxWorkers.
 		if *workers <= 0 || *workers > maxWorkers {
 			*workers = runtime.NumCPU()
 		}
@@ -201,7 +196,7 @@ func main() {
 		}
 
 		if err := <-errc; err != nil {
-			fmt.Fprintf(os.Stdout, decorateText(err.Error(), ErrorMessage))
+			fmt.Fprintf(os.Stderr, decorateText(err.Error(), ErrorMessage))
 		}
 
 	case mode.IsRegular() || mode&os.ModeNamedPipe != 0: // check for regular files or pipe commands
@@ -237,13 +232,11 @@ func main() {
 	}
 
 	procTime := time.Since(start)
-	s.Stop()
-
 	if len(os.Args) <= 1 && !flagsCheck {
 		log.Fatal("Usage: triangle -in <source> -out <destination>")
 	}
 
-	fmt.Fprintf(os.Stdout, "Finished in: %s\n", decorateText(fmt.Sprintf("%.2fs", procTime.Seconds()), SuccessMessage))
+	fmt.Fprintf(os.Stderr, "Execution time: %s\n", decorateText(fmt.Sprintf("%.2fs", procTime.Seconds()), SuccessMessage))
 }
 
 // walkDir starts a goroutine to walk the specified directory tree
@@ -338,6 +331,13 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 	defer src.(*os.File).Close()
 	defer dst.(*os.File).Close()
 
+	spinnerText := fmt.Sprintf("%s %s",
+		decorateText("▲ TRIANGLE", TriangleMessage),
+		decorateText("is generating the triangulated image...", DefaultMessage))
+
+	s := utils.NewSpinner(spinnerText, time.Millisecond*100, true)
+	s.Start()
+
 	if filepath.Ext(out) == ".svg" {
 		svg := &triangle.SVG{
 			Title:         "Image triangulator",
@@ -354,6 +354,10 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 		}
 		_, triangles, points, err = tri.Draw(src, dst, fn)
 	}
+	s.Stop()
+	fmt.Fprintf(os.Stderr, fmt.Sprintf("%s %s",
+		decorateText("▲ TRIANGLE", TriangleMessage),
+		decorateText("is generating the triangulated image... ✔", SuccessMessage)))
 
 	return triangles, points, err
 }
@@ -369,7 +373,7 @@ func pathToFile(in, out string, proc *triangle.Processor) (io.Reader, io.Writer,
 	if utils.IsValidUrl(in) {
 		src = imgurl
 	} else {
-		// Check if the source is a pipe file or a regular file.
+		// Check if the source is a pipe name or a regular file.
 		if in == pipeName {
 			if term.IsTerminal(int(os.Stdin.Fd())) {
 				return nil, nil, errors.New("`-` should be used with a pipe for stdin")
@@ -385,7 +389,7 @@ func pathToFile(in, out string, proc *triangle.Processor) (io.Reader, io.Writer,
 		}
 	}
 
-	// Check if the destination is a pipe file or a regular file.
+	// Check if the destination is a pipe name or a regular file.
 	if out == pipeName {
 		if term.IsTerminal(int(os.Stdout.Fd())) {
 			return nil, nil, errors.New("`-` should be used with a pipe for stdout")
@@ -404,7 +408,7 @@ func pathToFile(in, out string, proc *triangle.Processor) (io.Reader, io.Writer,
 
 // showProcessStatus displays the relavant information about the triangulation process.
 func showProcessStatus(
-	fn string,
+	fname string,
 	triangles []triangle.Triangle,
 	points []triangle.Point,
 	err error,
@@ -418,9 +422,9 @@ func showProcessStatus(
 		fmt.Fprintf(os.Stderr, fmt.Sprintf("\nTotal number of %s%d %striangles generated out of %s%d %vpoints\n",
 			utils.SuccessColor, len(triangles), utils.DefaultColor, utils.SuccessColor, len(points), utils.DefaultColor),
 		)
-		if fn != pipeName {
-			fmt.Fprintf(os.Stderr, fmt.Sprintf("Saved as: %s %s✓%s\n\n",
-				decorateText(filepath.Base(fn), SuccessMessage),
+		if fname != pipeName {
+			fmt.Fprintf(os.Stderr, fmt.Sprintf("Saved as: %s %s%s\n\n",
+				decorateText(filepath.Base(fname), SuccessMessage),
 				utils.SuccessColor,
 				utils.DefaultColor,
 			))

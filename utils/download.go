@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-// DownloadImage downloads the image obtained from the net and saves it into a temporary file.
+// DownloadImage downloads the image from the internet and saves it into a temporary file.
 func DownloadImage(url string) (*os.File, error) {
 	// Retrieve the url and decode the response body.
 	res, err := http.Get(url)
