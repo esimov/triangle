@@ -54,7 +54,10 @@ const (
 	TriangleMessage
 )
 
-var imgurl *os.File
+var (
+	imgurl  *os.File
+	spinner *utils.Spinner
+)
 
 // version indicates the current build version.
 var version string
@@ -103,6 +106,12 @@ func main() {
 		ShowInBrowser:   *showInBrowser,
 		BgColor:         *bgColor,
 	}
+
+	spinnerText := fmt.Sprintf("%s %s",
+		decorateText("▲ TRIANGLE", TriangleMessage),
+		decorateText("is generating the triangulated image...", DefaultMessage))
+
+	spinner = utils.NewSpinner(spinnerText, time.Millisecond*80, true)
 
 	// Supported input image file types.
 	srcExts := []string{".jpg", ".jpeg", ".png"}
@@ -331,12 +340,7 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 	defer src.(*os.File).Close()
 	defer dst.(*os.File).Close()
 
-	spinnerText := fmt.Sprintf("%s %s",
-		decorateText("▲ TRIANGLE", TriangleMessage),
-		decorateText("is generating the triangulated image...", DefaultMessage))
-
-	s := utils.NewSpinner(spinnerText, time.Millisecond*100, true)
-	s.Start()
+	spinner.Start()
 
 	if filepath.Ext(out) == ".svg" {
 		svg := &triangle.SVG{
@@ -354,10 +358,12 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 		}
 		_, triangles, points, err = tri.Draw(src, dst, fn)
 	}
-	s.Stop()
-	fmt.Fprintf(os.Stderr, fmt.Sprintf("%s %s",
+	stopMsg := fmt.Sprintf("%s %s",
 		decorateText("▲ TRIANGLE", TriangleMessage),
-		decorateText("is generating the triangulated image... ✔", SuccessMessage)))
+		decorateText("is generating the triangulated image... ✔", SuccessMessage))
+	spinner.StopMsg = stopMsg
+
+	spinner.Stop()
 
 	return triangles, points, err
 }
