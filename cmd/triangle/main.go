@@ -111,7 +111,7 @@ func main() {
 		decorateText("▲ TRIANGLE", TriangleMessage),
 		decorateText("is generating the triangulated image...", DefaultMessage))
 
-	spinner = utils.NewSpinner(spinnerText, time.Millisecond*80, true)
+	spinner = utils.NewSpinner(spinnerText, time.Millisecond*200, true)
 
 	// Supported input image file types.
 	srcExts := []string{".jpg", ".jpeg", ".png"}
@@ -245,7 +245,7 @@ func main() {
 		log.Fatal("Usage: triangle -in <source> -out <destination>")
 	}
 
-	fmt.Fprintf(os.Stderr, "Execution time: %s\n", decorateText(fmt.Sprintf("%.2fs", procTime.Seconds()), SuccessMessage))
+	fmt.Fprintf(os.Stderr, "Execution time: %s\n", decorateText(fmt.Sprintf("%s", utils.FormatTime(procTime)), SuccessMessage))
 }
 
 // walkDir starts a goroutine to walk the specified directory tree
