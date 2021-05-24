@@ -67,20 +67,25 @@ func (s *Spinner) Start() {
 func (s *Spinner) Stop() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.hideCursor && runtime.GOOS != "windows" {
-		// makes the cursor visible
-		fmt.Fprint(s.writer, "\033[?25h")
-	}
-	s.erase()
+
+	s.clear()
+	s.RestoreCursor()
 	if len(s.StopMsg) > 0 {
 		fmt.Fprintf(s.writer, s.StopMsg)
 	}
 	s.stopChan <- struct{}{}
 }
 
-// erase deletes the last terminal line.
-// Caller must hold the the locker.
-func (s *Spinner) erase() {
+// RestoreCursor restores back the cursor visibility.
+func (s *Spinner) RestoreCursor() {
+	if s.hideCursor && runtime.GOOS != "windows" {
+		// makes the cursor visible
+		fmt.Fprint(s.writer, "\033[?25h")
+	}
+}
+
+// clear deletes the last line. Caller must hold the the locker.
+func (s *Spinner) clear() {
 	n := utf8.RuneCountInString(s.lastOutput)
 	if runtime.GOOS == "windows" {
 		clearString := "\r" + strings.Repeat(" ", n) + "\r"
@@ -91,6 +96,6 @@ func (s *Spinner) erase() {
 	for _, c := range []string{"\b", "\127", "\b", "\033[K"} { // "\033[K" for macOS Terminal
 		fmt.Fprint(s.writer, strings.Repeat(c, n))
 	}
-	fmt.Fprintf(s.writer, "\r\033[K") // erases to end of line
+	fmt.Fprintf(s.writer, "\r\033[K") // clear line
 	s.lastOutput = ""
 }

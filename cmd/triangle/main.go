@@ -9,10 +9,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/esimov/triangle"
@@ -55,7 +57,9 @@ const (
 )
 
 var (
-	imgurl  *os.File
+	// imgurl holds the file being accessed be it normal file or pipe name.
+	imgurl *os.File
+	// spinner used to instantiate and call the progress indicator.
 	spinner *utils.Spinner
 )
 
@@ -340,6 +344,18 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 	defer src.(*os.File).Close()
 	defer dst.(*os.File).Close()
 
+	// Capture CTRL-C signal and restore the cursor visibility back.
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-signalChan
+		func() {
+			spinner.RestoreCursor()
+			os.Exit(1)
+		}()
+	}()
+
+	// Start the progress indicator.
 	spinner.Start()
 
 	if filepath.Ext(out) == ".svg" {
@@ -360,9 +376,10 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 	}
 	stopMsg := fmt.Sprintf("%s %s",
 		decorateText("▲ TRIANGLE", TriangleMessage),
-		decorateText("is generating the triangulated image... ✔", SuccessMessage))
+		decorateText("is generating the triangulated image... ✔", DefaultMessage))
 	spinner.StopMsg = stopMsg
 
+	// Stop the progress indicator.
 	spinner.Stop()
 
 	return triangles, points, err
