@@ -441,6 +441,7 @@ func showProcessStatus(
 			decorateText("\nError generating the triangulated image: %s", ErrorMessage),
 			decorateText(fmt.Sprintf("\n\tReason: %v\n", err.Error()), DefaultMessage),
 		)
+		os.Exit(0)
 	} else {
 		fmt.Fprintf(os.Stderr, fmt.Sprintf("\nTotal number of %s%d %striangles generated out of %s%d %vpoints\n",
 			utils.SuccessColor, len(triangles), utils.DefaultColor, utils.SuccessColor, len(points), utils.DefaultColor),
