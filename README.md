@@ -35,7 +35,7 @@ triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 - [x] Possibility to save the generated image as an **SVG** file.
 - [x] The generated SVG file can be accessed from the Web browser directly.
 - [x] Clean and intuitive API. The API not only that accepts image files but can also work with image data. This means that the [`Draw`](https://github.com/esimov/triangle/blob/65672f53a60a6a35f5e85bed69e46e97fe2d2def/process.go#L82) method can be invoked even on data streams. Check this [demo](https://github.com/esimov/pigo-wasm-demos#face-triangulator) for reference.
-- [x] Support for pipe commands (possibility to pipe in and pipe out the source and destination image).
+- [x] Support for pipe names (possibility to pipe in and pipe out the source and destination image).
 
 Head over to this [subtopic](#key-features) to get a better understanding of the supported features.
 
@@ -86,8 +86,8 @@ The CLI tool also let you process multiple images from a directory **concurrentl
 $ triangle -in <input_folder> -out <output-folder>
 ```
 
-#### Pipe commands
-The CLI tool accepts also pipe commands, which means you can use `stdin` and `stdout` without providing a value for the `-in` and `-out` flag directly since these defaults to `-`. For this reason is possible to use `curl` for example to get an image from the net and invoke the triangulation process over it directly without the need to download the image first and call **▲ Triangle** afterwards.
+#### Pipe names
+The CLI tool accepts also pipe names, which means you can use `stdin` and `stdout` without providing a value for the `-in` and `-out` flag directly since these defaults to `-`. For this reason is possible to use `curl` for example to obtain an image from the internet and invoke the triangulation process over it directly without the need to download the image first and call **▲ Triangle** afterwards.
 
 Here are some examples using pipe names:
 ```bash
