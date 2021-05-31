@@ -277,10 +277,10 @@ func walkDir(
 				return nil
 			}
 
-			// Get the file base name.
-			fx := filepath.Ext(info.Name())
+			// Get base file extension.
+			bfx := filepath.Ext(info.Name())
 			for _, ext := range srcExts {
-				if ext == fx {
+				if ext == bfx {
 					isFileSupported = true
 					break
 				}
@@ -341,6 +341,10 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 	)
 
 	src, dst, err := pathToFile(in, out, proc)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	defer src.(*os.File).Close()
 	defer dst.(*os.File).Close()
 
