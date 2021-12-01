@@ -87,11 +87,11 @@ $ triangle -in <input_folder> -out <output-folder>
 ```
 
 #### Pipe names
-The CLI tool accepts also pipe names, which means you can use `stdin` and `stdout` without providing a value for the `-in` and `-out` flag directly since these defaults to `-`. For this reason is possible to use `curl` for example to obtain an image from the internet and invoke the triangulation process over it directly without the need to download the image first and call **▲ Triangle** afterwards.
+The CLI tool accepts also pipe names, which means you can use `stdin` and `stdout` without the need of providing a value for the `-in` and `-out` flag directly since these defaults to `-`. For this reason it's possible to use `curl` for example for downloading an image from the internet and invoke the triangulation process over it directly without the need of getting the image first and calling **▲ Triangle** afterwards.
 
 Here are some examples using pipe names:
 ```bash
-$ curl <image_url> | triangle > out.jpg
+$ curl -s <image_url> | triangle > out.jpg
 $ cat input/source.jpg | triangle > out.jpg
 $ triangle -in input/source.jpg > out.jpg
 $ cat input/source.jpg | triangle -out out.jpg
