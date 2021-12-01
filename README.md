@@ -12,7 +12,7 @@
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
 
 ### The process
-* First the image is blured out to smothen sharp pixel edges. The more blured an image is the more diffused the generated output will be.
+* First the image is blured out to smoth out the sharp pixel edges. The more blured an image is the more diffused the generated output will be.
 * Second the resulted image is converted to grayscale mode.
 * Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulted image.
 * Lastly the delaunay algorithm is applied on the pixels obtained from the previous step.
@@ -75,7 +75,7 @@ The following flags are supported:
 | `gray` | false | Output in grayscale mode |
 | `web` | false | Open the SVG file in the web browser |
 | `bg` | ' ' | Background color (specified as hex value) |
-| `c` | system spec. | Number of files to process concurrently (workers)
+| `c` | system spec. | Number of files to process concurrently
 
 ## Key features
 
