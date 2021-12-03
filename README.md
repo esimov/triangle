@@ -86,6 +86,11 @@ The CLI tool also let you process multiple images from a directory **concurrentl
 $ triangle -in <input_folder> -out <output-folder>
 ```
 
+You can provide also an image file URL for the `-in` flag.
+```bash
+$ triangle -in <image_url> -out <output-folder>
+```
+
 #### Pipe names
 The CLI tool accepts also pipe names, which means you can use `stdin` and `stdout` without the need of providing a value for the `-in` and `-out` flag directly since these defaults to `-`. For this reason it's possible to use `curl` for example for downloading an image from the internet and invoke the triangulation process over it directly without the need of getting the image first and calling **▲ Triangle** afterwards.
 
