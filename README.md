@@ -12,7 +12,7 @@
 ![Sample image](https://github.com/esimov/triangle/blob/master/output/sample_3.png)
 
 ### The process
-* First the image is blured out to smothen sharp pixel edges. The more blured an image is the more diffused the generated output will be.
+* First the image is blured out to smoth out the sharp pixel edges. The more blured an image is the more diffused the generated output will be.
 * Second the resulted image is converted to grayscale mode.
 * Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulted image.
 * Lastly the delaunay algorithm is applied on the pixels obtained from the previous step.
@@ -75,7 +75,7 @@ The following flags are supported:
 | `gray` | false | Output in grayscale mode |
 | `web` | false | Open the SVG file in the web browser |
 | `bg` | ' ' | Background color (specified as hex value) |
-| `c` | system spec. | Number of files to process concurrently (workers)
+| `c` | system spec. | Number of files to process concurrently
 
 ## Key features
 
@@ -86,12 +86,17 @@ The CLI tool also let you process multiple images from a directory **concurrentl
 $ triangle -in <input_folder> -out <output-folder>
 ```
 
+You can provide also an image file URL for the `-in` flag.
+```bash
+$ triangle -in <image_url> -out <output-folder>
+```
+
 #### Pipe names
-The CLI tool accepts also pipe names, which means you can use `stdin` and `stdout` without providing a value for the `-in` and `-out` flag directly since these defaults to `-`. For this reason is possible to use `curl` for example to obtain an image from the internet and invoke the triangulation process over it directly without the need to download the image first and call **▲ Triangle** afterwards.
+The CLI tool accepts also pipe names, which means you can use `stdin` and `stdout` without the need of providing a value for the `-in` and `-out` flag directly since these defaults to `-`. For this reason it's possible to use `curl` for example for downloading an image from the internet and invoke the triangulation process over it directly without the need of getting the image first and calling **▲ Triangle** afterwards.
 
 Here are some examples using pipe names:
 ```bash
-$ curl <image_url> | triangle > out.jpg
+$ curl -s <image_url> | triangle > out.jpg
 $ cat input/source.jpg | triangle > out.jpg
 $ triangle -in input/source.jpg > out.jpg
 $ cat input/source.jpg | triangle -out out.jpg
