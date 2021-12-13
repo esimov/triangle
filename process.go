@@ -69,17 +69,20 @@ type SVG struct {
 	Processor
 }
 
+// Fn is a callback function used on SVG generation.
+type Fn func()
+
 // Drawer interface defines the Draw method.
 // This has to be implemented by every struct which declares a Draw method.
 // By using this method the image can be triangulated as raster type or SVG.
 type Drawer interface {
-	Draw(interface{}, io.Writer) ([]Triangle, []Point, error)
+	Draw(interface{}, interface{}, Fn) (image.Image, []Triangle, []Point, error)
 }
 
 // Draw is an interface method which triangulates the source type and outputs the result even to an image or a pixel data.
 // The input could be an image file or a pixel data. This is the reason why interface is used as argument type.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.Image, []Triangle, []Point, error) {
+func (im *Image) Draw(input interface{}, output interface{}, fn Fn) (image.Image, []Triangle, []Point, error) {
 	var (
 		err    error
 		src    interface{}
@@ -217,7 +220,7 @@ func (im *Image) Draw(input interface{}, output interface{}, fn func()) (image.I
 // for further processing, like opening the generated SVG file in the web browser.
 // Everyone can define it's own callback function, depending on each one personal needs.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (svg *SVG) Draw(input io.Reader, output io.Writer, fn func()) (image.Image, []Triangle, []Point, error) {
+func (svg *SVG) Draw(input interface{}, output interface{}, fn Fn) (image.Image, []Triangle, []Point, error) {
 	const SVGTemplate = `<?xml version="1.0" ?>
 	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
 	  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
@@ -243,7 +246,7 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, fn func()) (image.Image,
 		strokeColor color.RGBA
 	)
 
-	src, _, err := image.Decode(input)
+	src, _, err := image.Decode(input.(io.Reader))
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -305,7 +308,7 @@ func (svg *SVG) Draw(input io.Reader, output io.Writer, fn func()) (image.Image,
 	svg.Lines = lines
 
 	tmpl := template.Must(template.New("svg").Parse(SVGTemplate))
-	if err := tmpl.Execute(output, svg); err != nil {
+	if err := tmpl.Execute(output.(io.Writer), svg); err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}

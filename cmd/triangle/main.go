@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"image"
 	"io"
 	"io/ioutil"
 	"log"
@@ -328,7 +329,7 @@ func consumer(
 
 // processor triangulates the source image and returns the number
 // of triangles, points and the error in case if exists.
-func processor(in, out string, proc *triangle.Processor, fn func()) (
+func processor(in, out string, proc *triangle.Processor, fn triangle.Fn) (
 	[]triangle.Triangle,
 	[]triangle.Point,
 	error,
@@ -371,12 +372,12 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 			StrokeLineCap: "round", //butt, round, square
 			Processor:     *proc,
 		}
-		_, triangles, points, err = svg.Draw(src, dst, fn)
+		_, triangles, points, err = draw(svg, src, dst, fn)
 	} else {
 		tri := &triangle.Image{
 			Processor: *proc,
 		}
-		_, triangles, points, err = tri.Draw(src, dst, fn)
+		_, triangles, points, err = draw(tri, src, dst, fn)
 	}
 	stopMsg := fmt.Sprintf("%s %s",
 		decorateText("▲ TRIANGLE", TriangleMessage),
@@ -387,6 +388,16 @@ func processor(in, out string, proc *triangle.Processor, fn func()) (
 	spinner.Stop()
 
 	return triangles, points, err
+}
+
+// draw calls the generic Draw function on each struct which implements this function.
+func draw(drawer triangle.Drawer, src interface{}, dst interface{}, fn triangle.Fn) (
+	image.Image,
+	[]triangle.Triangle,
+	[]triangle.Point,
+	error,
+) {
+	return drawer.Draw(src, dst, fn)
 }
 
 // pathToFile converts the source and destination paths to readable and writable files.
