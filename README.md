@@ -2,7 +2,7 @@
 # ![Triangle logo](https://user-images.githubusercontent.com/883386/32769128-4d9625c6-c923-11e7-9a96-030f2f0efff3.png)
 
 [![build](https://github.com/esimov/triangle/actions/workflows/build.yml/badge.svg)](https://github.com/esimov/triangle/actions/workflows/build.yml)
-[![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/esimov/triangle)
+[![Go Reference](https://pkg.go.dev/badge/github.com/esimov/triangle.svg)](https://pkg.go.dev/github.com/esimov/triangle)
 [![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
 [![release](https://img.shields.io/badge/release-v1.2.3-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.2.3)
 [![homebrew](https://img.shields.io/badge/homebrew-v1.2.3-orange.svg)](https://formulae.brew.sh/formula/triangle)
