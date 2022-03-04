@@ -1,7 +1,7 @@
 /*
-Package triangle is an image processing library, which converts images to computer generated art using delaunay triangulation.
+Package triangle is an image processing library which converts images to computer generated art using delaunay triangulation.
 
-The package provides a command line interface, supporting various options for the output customization.
+The package provides a command line utility supporting various customization options.
 Check the supported commands by typing:
 
 	$ triangle --help
@@ -24,14 +24,13 @@ Example to generate triangulated image and output the result as raster type:
 
 		img := &triangle.Image{*p}
 		_, _, err = img.Draw(file, fq, func() {})
-
 		if err != nil {
 			fmt.Printf("Error on triangulation process: %s", err.Error())
 		}
 	}
 
 
-Example to generate triangulated image and output the result to SVG:
+Example to generate triangulated image and output the result as SVG:
 
 	package main
 
@@ -56,7 +55,6 @@ Example to generate triangulated image and output the result to SVG:
 		_, _, err = svg.Draw(file, fq, func() {
 			// Call the closure function
 		})
-
 		if err != nil {
 			fmt.Printf("Error on triangulation process: %s", err.Error())
 		}
