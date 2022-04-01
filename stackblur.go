@@ -70,13 +70,15 @@ func StackBlur(img *image.NRGBA, radius uint32) *image.NRGBA {
 		pr, pg, pb, pa uint32
 	)
 
+	// Stop blurring and return the original image in case the radius is less then 1.
+	if radius < 1 {
+		return img
+	}
+
 	// Limit the maximum blur radius to 255, otherwise it overflows the multable length
 	// and will panic with and index out of range error.
 	if int(radius) >= len(mulTable) {
 		radius = uint32(len(mulTable) - 1)
-	}
-	if radius < 1 {
-		radius = 1
 	}
 
 	div = radius + radius + 1
