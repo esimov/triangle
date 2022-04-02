@@ -27,18 +27,32 @@ const (
 
 // Processor encompasses all of the currently supported processing options.
 type Processor struct {
-	BlurRadius      int
-	SobelThreshold  int
+	// BlurRadius defines the intensity of the applied blur filter.
+	BlurRadius int
+	// SobelThreshold defines the threshold intesinty of the sobel edge detector.
+	// By increasing this value the contours of the detected objects will be more evident.
+	SobelThreshold int
+	// PointsThreshold defines the threshold of computed pixel value below a point is generated.
 	PointsThreshold int
-	MaxPoints       int
-	Wireframe       int
-	Noise           int
-	StrokeWidth     float64
-	IsStrokeSolid   bool
-	Grayscale       bool
-	OutputToSVG     bool
-	ShowInBrowser   bool
-	BgColor         string
+	// MaxPoints holds the maximum number of generated points the vertices/triangles will be generated from.
+	MaxPoints int
+	// Wireframe defines the visual appearence of the generated vertices (WithoutWireframe|WithWireframe|WireframeOnly).
+	Wireframe int
+	// Noise defines the intensity of the noise factor used to give a noisy, despeckle like touch of the final image.
+	Noise int
+	// StrokeWidth defines the contour width in case of using WithWireframe | WireframeOnly mode.
+	StrokeWidth float64
+	// IsStrokeSolid - when this is set as true, the applied stroke color will be black.
+	IsStrokeSolid bool
+	// Grayscale will generate the output in grayscale mode.
+	Grayscale bool
+	// OutputToSVG saves the generated triangles to an SVG file.
+	OutputToSVG bool
+	// ShowInBrowser shows the generated svg file in the browser.
+	ShowInBrowser bool
+	// BgColor defines the background color in case of using transparent images as source files.
+	// By default the background is transparent, but it can be changed using a hexadecimal format, like #fff or #ffff00.
+	BgColor string
 }
 
 // Line defines the SVG line parameters.
@@ -120,6 +134,10 @@ func (im *Image) Draw(input interface{}, output interface{}, fn Fn) (image.Image
 	img := ToNRGBA(src.(image.Image))
 
 	blur := StackBlur(img, uint32(im.BlurRadius))
+	if im.MaxPoints < 1 {
+		fn()
+		return blur, nil, nil, err
+	}
 	gray := Grayscale(blur)
 	sobel := SobelFilter(gray, float64(im.SobelThreshold))
 	points := GetEdgePoints(sobel, im.PointsThreshold, im.MaxPoints)
