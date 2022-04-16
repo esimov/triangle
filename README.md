@@ -37,6 +37,9 @@ triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
 - [x] Clean and intuitive API. The API not only that accepts image files but can also work with image data. This means that the [`Draw`](https://github.com/esimov/triangle/blob/65672f53a60a6a35f5e85bed69e46e97fe2d2def/process.go#L82) method can be invoked even on data streams. Check this [demo](https://github.com/esimov/pigo-wasm-demos#face-triangulator) for reference.
 - [x] Support for pipe names (possibility to pipe in and pipe out the source and destination image).
 
+#### TODO
+- [ ] Standalone and native GUI application
+
 Head over to this [subtopic](#key-features) to get a better understanding of the supported features.
 
 ## Installation and usage
