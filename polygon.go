@@ -6,17 +6,17 @@ import (
 	"time"
 )
 
-// PointRate defines the default point rate.
+// pointRate defines the default point rate.
 // Changing this value will modify the triangles sizes.
-const PointRate = 0.875
+const pointRate = 0.875
 
 // GetEdgePoints retrieves the triangle points after the Sobel threshold has been applied.
 func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int) []Point {
-	rand.Seed(time.Now().UTC().UnixNano())
-	width, height := img.Bounds().Max.X, img.Bounds().Max.Y
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	width, height := img.Bounds().Dx(), img.Bounds().Dy()
 
 	var (
-		sum, total     int
+		sum, total     uint8
 		x, y, sx, sy   int
 		row, col, step int
 		points         []Point
@@ -30,12 +30,11 @@ func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int) []Point {
 			for row = -1; row <= 1; row++ {
 				sy = y + row
 				step = sy * width
-
 				if sy >= 0 && sy < height {
 					for col = -1; col <= 1; col++ {
 						sx = x + col
 						if sx >= 0 && sx < width {
-							sum += int(img.Pix[(sx+step)*4])
+							sum += img.Pix[(sx+step)<<2]
 							total++
 						}
 					}
@@ -44,25 +43,21 @@ func GetEdgePoints(img *image.NRGBA, threshold, maxPoints int) []Point {
 			if total > 0 {
 				sum /= total
 			}
-			if sum > threshold {
-				points = append(points, Point{X: x, Y: y})
+			if sum > uint8(threshold) {
+				points = append(points, Point{X: float64(x), Y: float64(y)})
 			}
 		}
 	}
 	ilen := len(points)
-	tlen := ilen
-	limit := int(float64(ilen) * PointRate)
+	limit := int(float64(ilen) * pointRate)
 
 	if limit > maxPoints {
 		limit = maxPoints
 	}
 
 	for i := 0; i < limit && i < ilen; i++ {
-		j := int(float64(tlen) * rand.Float64())
+		j := int(float64(ilen) * r.Float64())
 		dpoints = append(dpoints, points[j])
-		// Remove points
-		points = append(points[:j], points[j+1:]...)
-		tlen--
 	}
 	return dpoints
 }
