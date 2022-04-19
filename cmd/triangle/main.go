@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"io/ioutil"
 	"log"
@@ -16,10 +18,12 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"text/template"
 	"time"
 
 	"github.com/esimov/triangle"
 	"github.com/esimov/triangle/utils"
+	"golang.org/x/image/bmp"
 	"golang.org/x/term"
 )
 
@@ -72,18 +76,21 @@ func main() {
 		// Command line flags
 		source          = flag.String("in", pipeName, "Source image")
 		destination     = flag.String("out", pipeName, "Destination image")
-		blurRadius      = flag.Int("blur", 4, "Blur radius")
-		sobelThreshold  = flag.Int("sobel", 10, "Sobel filter threshold")
-		pointsThreshold = flag.Int("th", 20, "Points threshold")
+		blurRadius      = flag.Int("bl", 2, "Blur radius")
+		sobelThreshold  = flag.Int("so", 10, "Sobel filter threshold")
+		pointsThreshold = flag.Int("pth", 10, "Points threshold")
+		pointRate       = flag.Float64("pr", 0.075, "Point rate")
+		blurFactor      = flag.Int("bf", 1, "Blur factor")
+		edgeFactor      = flag.Int("ef", 6, "Edge factor")
 		maxPoints       = flag.Int("pts", 2500, "Maximum number of points")
 		wireframe       = flag.Int("wf", 0, "Wireframe mode (0: without stroke, 1: with stroke, 2: stroke only)")
-		noise           = flag.Int("noise", 0, "Noise factor")
-		strokeWidth     = flag.Float64("stroke", 1, "Stroke width")
-		isStrokeSolid   = flag.Bool("solid", false, "Use solid stroke color (yes/no)")
-		grayscale       = flag.Bool("gray", false, "Output in grayscale mode")
+		noise           = flag.Int("nf", 0, "Noise factor")
+		strokeWidth     = flag.Float64("stw", 1, "Stroke width")
+		isStrokeSolid   = flag.Bool("sl", false, "Use solid stroke color (yes/no)")
+		grayscale       = flag.Bool("gr", false, "Output in grayscale mode")
 		showInBrowser   = flag.Bool("web", false, "Open the SVG file in the web browser")
 		bgColor         = flag.String("bg", "", "Background color (specified as hex value)")
-		workers         = flag.Int("c", runtime.NumCPU(), "Number of files to process concurrently")
+		workers         = flag.Int("cw", runtime.NumCPU(), "Number of concurrently workers")
 
 		// File related variables
 		fs  os.FileInfo
@@ -102,6 +109,9 @@ func main() {
 		BlurRadius:      *blurRadius,
 		SobelThreshold:  *sobelThreshold,
 		PointsThreshold: *pointsThreshold,
+		PointRate:       *pointRate,
+		BlurFactor:      *blurFactor,
+		EdgeFactor:      *edgeFactor,
 		MaxPoints:       *maxPoints,
 		Wireframe:       *wireframe,
 		Noise:           *noise,
@@ -335,19 +345,20 @@ func processor(in, out string, proc *triangle.Processor, fn triangle.Fn) (
 	error,
 ) {
 	var (
+		img image.Image
+
 		// Triangle related variables
 		triangles []triangle.Triangle
 		points    []triangle.Point
 		err       error
 	)
 
-	src, dst, err := pathToFile(in, out, proc)
+	input, output, err := pathToFile(in, out, proc)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	defer src.(*os.File).Close()
-	defer dst.(*os.File).Close()
+	defer input.(*os.File).Close()
+	defer output.(*os.File).Close()
 
 	// Capture CTRL-C signal and restore the cursor visibility back.
 	signalChan := make(chan os.Signal, 1)
@@ -364,6 +375,24 @@ func processor(in, out string, proc *triangle.Processor, fn triangle.Fn) (
 	spinner.Start()
 
 	if filepath.Ext(out) == ".svg" {
+		const SVGTemplate = `<?xml version="1.0" ?>
+	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+	  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+	<svg width="{{.Width}}px" height="{{.Height}}px" viewBox="0 0 {{.Width}} {{.Height}}"
+	     xmlns="http://www.w3.org/2000/svg" version="1.1">
+	  <title>{{.Title}}</title>
+	  <desc>{{.Description}}</desc>
+	  <!-- Points -->
+	  <g stroke-linecap="{{.StrokeLineCap}}" stroke-width="{{.StrokeWidth}}">
+	    {{range .Lines}}
+		<path
+			fill="rgba({{.FillColor.R}},{{.FillColor.G}},{{.FillColor.B}},{{.FillColor.A}})"
+	   		stroke="rgba({{.StrokeColor.R}},{{.StrokeColor.G}},{{.StrokeColor.B}},{{.StrokeColor.A}})"
+			d="M{{.P0.X}},{{.P0.Y}} L{{.P1.X}},{{.P1.Y}} L{{.P2.X}},{{.P2.Y}} L{{.P3.X}},{{.P3.Y}}"
+		/>
+	    {{end}}</g>
+	</svg>`
+
 		svg := &triangle.SVG{
 			Title:         "Image triangulator",
 			Lines:         []triangle.Line{},
@@ -372,13 +401,30 @@ func processor(in, out string, proc *triangle.Processor, fn triangle.Fn) (
 			StrokeLineCap: "round", //butt, round, square
 			Processor:     *proc,
 		}
-		_, triangles, points, err = draw(svg, src, dst, fn)
+		src, err := svg.DecodeImage(input)
+		if err != nil {
+			return nil, nil, err
+		}
+		img, triangles, points, err = draw(svg, src, proc, fn)
+
+		tmpl := template.Must(template.New("svg").Parse(SVGTemplate))
+		if err := tmpl.Execute(output, svg); err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
 	} else {
 		tri := &triangle.Image{
 			Processor: *proc,
 		}
-		_, triangles, points, err = draw(tri, src, dst, fn)
+		src, err := tri.DecodeImage(input)
+		if err != nil {
+			return nil, nil, err
+		}
+		img, triangles, points, err = draw(tri, src, proc, fn)
+
+		err = encodeImage(img, output.(*os.File))
 	}
+
 	stopMsg := fmt.Sprintf("%s %s",
 		decorateText("▲ TRIANGLE", TriangleMessage),
 		decorateText("is generating the triangulated image... ✔", DefaultMessage))
@@ -391,13 +437,35 @@ func processor(in, out string, proc *triangle.Processor, fn triangle.Fn) (
 }
 
 // draw calls the generic Draw function on each struct which implements this function.
-func draw(drawer triangle.Drawer, src interface{}, dst interface{}, fn triangle.Fn) (
+func draw(drawer triangle.Drawer, src image.Image, proc *triangle.Processor, fn triangle.Fn) (
 	image.Image,
 	[]triangle.Triangle,
 	[]triangle.Point,
 	error,
 ) {
-	return drawer.Draw(src, dst, fn)
+	return drawer.Draw(src, *proc, fn)
+}
+
+// encodeImage encodes the generated triangles into an image file type.
+func encodeImage(img image.Image, output *os.File) error {
+	ext := filepath.Ext(output.Name())
+	switch ext {
+	case "", ".jpg", ".jpeg":
+		if err := jpeg.Encode(output, img, &jpeg.Options{Quality: 100}); err != nil {
+			return err
+		}
+	case ".png":
+		if err := png.Encode(output, img); err != nil {
+			return err
+		}
+	case ".bmp":
+		if err := bmp.Encode(output, img); err != nil {
+			return err
+		}
+	default:
+		return errors.New("unsupported image format")
+	}
+	return nil
 }
 
 // pathToFile converts the source and destination paths to readable and writable files.

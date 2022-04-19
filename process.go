@@ -2,18 +2,12 @@ package triangle
 
 import (
 	"errors"
-	"fmt"
 	"image"
 	"image/color"
-	"image/jpeg"
-	"image/png"
+	"image/draw"
 	"io"
-	"os"
-	"path/filepath"
-	"text/template"
 
 	"github.com/fogleman/gg"
-	"golang.org/x/image/bmp"
 )
 
 const (
@@ -34,6 +28,15 @@ type Processor struct {
 	SobelThreshold int
 	// PointsThreshold defines the threshold of computed pixel value below a point is generated.
 	PointsThreshold int
+	// PointRate defines the point rate by which the generated polygons will be multiplied by.
+	// The lower this value the bigger the polygons will be.
+	PointRate float64
+	// BlurFactor defines the factor used to populate the matrix table in conjunction with the convolution filter operator.
+	// This value will affect the outcome of the final triangulated image.
+	BlurFactor int
+	// EdgeFactor defines the factor used to populate the matrix table in conjunction with the convolution filter operator.
+	// The bigger this value is the more cubic alike will be the final image.
+	EdgeFactor int
 	// MaxPoints holds the maximum number of generated points the vertices/triangles will be generated from.
 	MaxPoints int
 	// Wireframe defines the visual appearence of the generated vertices (WithoutWireframe|WithWireframe|WireframeOnly).
@@ -87,66 +90,40 @@ type SVG struct {
 type Fn func()
 
 // Drawer interface defines the Draw method.
-// This has to be implemented by every struct which declares a Draw method.
+// This interface should be implemented by every struct which declares a Draw method.
 // By using this method the image can be triangulated as raster type or SVG.
 type Drawer interface {
-	Draw(interface{}, interface{}, Fn) (image.Image, []Triangle, []Point, error)
+	Draw(image.Image, Processor, Fn) (image.Image, []Triangle, []Point, error)
 }
 
-// Draw is an interface method which triangulates the source type and outputs the result even to an image or a pixel data.
-// The input could be an image file or a pixel data. This is the reason why interface is used as argument type.
+// Draw triangulates the source image and outputs the result to a raster type.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (im *Image) Draw(input interface{}, output interface{}, fn Fn) (image.Image, []Triangle, []Point, error) {
+func (im *Image) Draw(src image.Image, proc Processor, fn Fn) (image.Image, []Triangle, []Point, error) {
 	var (
-		err    error
-		src    interface{}
-		srcImg *image.NRGBA
+		err         error
+		strokeColor color.RGBA
 	)
 
-	switch input.(type) {
-	case *os.File:
-		src, _, err = image.Decode(input.(io.Reader))
-		if err != nil {
-			return nil, nil, nil, err
-		}
-	default:
-		src = input
-	}
-
-	width, height := src.(image.Image).Bounds().Dx(), src.(image.Image).Bounds().Dy()
+	width, height := src.Bounds().Dx(), src.Bounds().Dy()
 	if width <= 1 || height <= 1 {
-		err := errors.New("The image width and height must be greater than 1px.\n")
+		err = errors.New("The image width and height must be greater than 1px.\n")
 		return nil, nil, nil, err
 	}
 
 	// Define a new context and fill it with a background color.
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
+
 	if im.BgColor != "" {
 		ctx.SetRGBA(1, 1, 1, 1)
 	} else {
 		ctx.SetRGBA(0, 0, 0, 0)
 	}
-
 	ctx.Fill()
 
-	delaunay := &Delaunay{}
-	img := ToNRGBA(src.(image.Image))
-
-	blur := StackBlur(img, uint32(im.BlurRadius))
-	if im.MaxPoints < 1 {
-		fn()
-		return blur, nil, nil, err
-	}
-	gray := Grayscale(blur)
-	sobel := SobelFilter(gray, float64(im.SobelThreshold))
-	points := GetEdgePoints(sobel, im.PointsThreshold, im.MaxPoints)
-	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
-
-	if im.Grayscale {
-		srcImg = gray
-	} else {
-		srcImg = img
+	img, triangles, points := genTriangles(src, proc)
+	if len(triangles) == 0 {
+		return img, nil, nil, err
 	}
 
 	for _, t := range triangles {
@@ -161,9 +138,8 @@ func (im *Image) Draw(input interface{}, output interface{}, fn Fn) (image.Image
 		cx := float64(p0.X+p1.X+p2.X) * 0.33333
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
-		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
-		r, g, b, a := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2], srcImg.Pix[j+3]
-		var strokeColor color.RGBA
+		j := (int(cx) + int(cy)*width) * 4
+		r, g, b, a := img.Pix[j], img.Pix[j+1], img.Pix[j+2], img.Pix[j+3]
 		if im.IsStrokeSolid {
 			strokeColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
 		} else {
@@ -204,90 +180,47 @@ func (im *Image) Draw(input interface{}, output interface{}, fn Fn) (image.Image
 	}
 
 	newImg := ctx.Image()
-	switch output.(type) {
-	case *os.File:
-		// Apply a noise on the final image.
-		if im.Noise > 0 {
-			newImg = Noise(im.Noise, newImg, newImg.Bounds().Dx(), newImg.Bounds().Dy())
-		}
 
-		ext := filepath.Ext(output.(*os.File).Name())
-		switch ext {
-		case "", ".jpg", ".jpeg":
-			if err = jpeg.Encode(output.(io.Writer), newImg, &jpeg.Options{Quality: 100}); err != nil {
-				return nil, nil, nil, err
-			}
-		case ".png":
-			if err = png.Encode(output.(io.Writer), newImg); err != nil {
-				return nil, nil, nil, err
-			}
-		case ".bmp":
-			if err = bmp.Encode(output.(io.Writer), newImg); err != nil {
-				return nil, nil, nil, err
-			}
-		default:
-			return nil, nil, nil, errors.New("unsupported image format")
-		}
+	// Apply a noise on the final image.
+	if im.Noise > 0 {
+		newImg = Noise(im.Noise, newImg, newImg.Bounds().Dx(), newImg.Bounds().Dy())
 	}
 	fn()
 	return newImg, triangles, points, err
 }
 
+// DecodeImage calls the decodeImage utility function which
+// decodes an image file type to the generic image.Image type.
+func (im *Image) DecodeImage(input io.Reader) (image.Image, error) {
+	return decodeImage(input)
+}
+
 // Draw triangulates the source image and outputs the result to an SVG file.
 // It has the same method signature as the rester Draw method, only that accepts a callback function
 // for further processing, like opening the generated SVG file in the web browser.
-// Everyone can define it's own callback function, depending on each one personal needs.
 // It returns the number of triangles generated, the number of points and the error in case exists.
-func (svg *SVG) Draw(input interface{}, output interface{}, fn Fn) (image.Image, []Triangle, []Point, error) {
-	const SVGTemplate = `<?xml version="1.0" ?>
-	<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
-	  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-	<svg width="{{.Width}}px" height="{{.Height}}px" viewBox="0 0 {{.Width}} {{.Height}}"
-	     xmlns="http://www.w3.org/2000/svg" version="1.1">
-	  <title>{{.Title}}</title>
-	  <desc>{{.Description}}</desc>
-	  <!-- Points -->
-	  <g stroke-linecap="{{.StrokeLineCap}}" stroke-width="{{.StrokeWidth}}">
-	    {{range .Lines}}
-		<path
-			fill="rgba({{.FillColor.R}},{{.FillColor.G}},{{.FillColor.B}},{{.FillColor.A}})"
-	   		stroke="rgba({{.StrokeColor.R}},{{.StrokeColor.G}},{{.StrokeColor.B}},{{.StrokeColor.A}})"
-			d="M{{.P0.X}},{{.P0.Y}} L{{.P1.X}},{{.P1.Y}} L{{.P2.X}},{{.P2.Y}} L{{.P3.X}},{{.P3.Y}}"
-		/>
-	    {{end}}</g>
-	</svg>`
-
-	var srcImg *image.NRGBA
+func (svg *SVG) Draw(src image.Image, proc Processor, fn Fn) (image.Image, []Triangle, []Point, error) {
 	var (
+		err         error
 		lines       []Line
 		fillColor   color.RGBA
 		strokeColor color.RGBA
 	)
 
-	src, _, err := image.Decode(input.(io.Reader))
-	if err != nil {
+	width, height := src.Bounds().Dx(), src.Bounds().Dy()
+	if width <= 1 || height <= 1 {
+		err := errors.New("The image width and height must be greater than 1px.\n")
 		return nil, nil, nil, err
 	}
 
-	width, height := src.Bounds().Dx(), src.Bounds().Dy()
 	ctx := gg.NewContext(width, height)
 	ctx.DrawRectangle(0, 0, float64(width), float64(height))
 	ctx.SetRGBA(1, 1, 1, 1)
 	ctx.Fill()
 
-	delaunay := &Delaunay{}
-	img := ToNRGBA(src)
-
-	blur := StackBlur(img, uint32(svg.BlurRadius))
-	gray := Grayscale(blur)
-	sobel := SobelFilter(gray, float64(svg.SobelThreshold))
-	points := GetEdgePoints(sobel, svg.PointsThreshold, svg.MaxPoints)
-	triangles := delaunay.Init(width, height).Insert(points).GetTriangles()
-
-	if svg.Grayscale {
-		srcImg = gray
-	} else {
-		srcImg = img
+	img, triangles, points := genTriangles(src, proc)
+	if len(triangles) == 0 {
+		return img, nil, nil, err
 	}
 
 	for _, t := range triangles {
@@ -296,7 +229,7 @@ func (svg *SVG) Draw(input interface{}, output interface{}, fn Fn) (image.Image,
 		cy := float64(p0.Y+p1.Y+p2.Y) * 0.33333
 
 		j := ((int(cx) | 0) + (int(cy)|0)*width) * 4
-		r, g, b := srcImg.Pix[j], srcImg.Pix[j+1], srcImg.Pix[j+2]
+		r, g, b := img.Pix[j], img.Pix[j+1], img.Pix[j+2]
 
 		if svg.IsStrokeSolid {
 			strokeColor = color.RGBA{R: 0, G: 0, B: 0, A: 255}
@@ -325,71 +258,57 @@ func (svg *SVG) Draw(input interface{}, output interface{}, fn Fn) (image.Image,
 	svg.Height = height
 	svg.Lines = lines
 
-	tmpl := template.Must(template.New("svg").Parse(SVGTemplate))
-	if err := tmpl.Execute(output.(io.Writer), svg); err != nil {
-		fmt.Printf("Error: %v\n", err)
-		os.Exit(1)
-	}
 	// Trigger the callback function after the generation is completed.
 	fn()
-	return nil, triangles, points, err
+	return img, triangles, points, err
 }
 
-// ToNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
-func ToNRGBA(img image.Image) *image.NRGBA {
-	srcBounds := img.Bounds()
-	if srcBounds.Min.X == 0 && srcBounds.Min.Y == 0 {
-		if src0, ok := img.(*image.NRGBA); ok {
-			return src0
-		}
+// DecodeImage calls the decodeImage utility function which
+// decodes an image file type to the generic image.Image type.
+func (svg *SVG) DecodeImage(input io.Reader) (image.Image, error) {
+	return decodeImage(input)
+}
+
+// decodeImage decodes an input argument of type io.Reader to an image.
+func decodeImage(input io.Reader) (image.Image, error) {
+	src, _, err := image.Decode(input)
+	if err != nil {
+		return nil, err
 	}
-	srcMinX := srcBounds.Min.X
-	srcMinY := srcBounds.Min.Y
+	return src, nil
+}
 
-	dstBounds := srcBounds.Sub(srcBounds.Min)
-	dstW := dstBounds.Dx()
-	dstH := dstBounds.Dy()
-	dst := image.NewNRGBA(dstBounds)
+// genTriangles generates the triangles and returns the triangles and points slices.
+func genTriangles(src image.Image, p Processor) (*image.NRGBA, []Triangle, []Point) {
+	var srcImg *image.NRGBA
+	delaunay := &Delaunay{}
 
-	switch src := img.(type) {
-	case *image.NRGBA:
-		rowSize := srcBounds.Dx() * 4
-		for dstY := 0; dstY < dstH; dstY++ {
-			di := dst.PixOffset(0, dstY)
-			si := src.PixOffset(srcMinX, srcMinY+dstY)
-			for dstX := 0; dstX < dstW; dstX++ {
-				copy(dst.Pix[di:di+rowSize], src.Pix[si:si+rowSize])
-			}
-		}
-	case *image.YCbCr:
-		for dstY := 0; dstY < dstH; dstY++ {
-			di := dst.PixOffset(0, dstY)
-			for dstX := 0; dstX < dstW; dstX++ {
-				srcX := srcMinX + dstX
-				srcY := srcMinY + dstY
-				siy := src.YOffset(srcX, srcY)
-				sic := src.COffset(srcX, srcY)
-				r, g, b := color.YCbCrToRGB(src.Y[siy], src.Cb[sic], src.Cr[sic])
-				dst.Pix[di+0] = r
-				dst.Pix[di+1] = g
-				dst.Pix[di+2] = b
-				dst.Pix[di+3] = 0xff
-				di += 4
-			}
-		}
-	default:
-		for dstY := 0; dstY < dstH; dstY++ {
-			di := dst.PixOffset(0, dstY)
-			for dstX := 0; dstX < dstW; dstX++ {
-				c := color.NRGBAModel.Convert(img.At(srcMinX+dstX, srcMinY+dstY)).(color.NRGBA)
-				dst.Pix[di+0] = c.R
-				dst.Pix[di+1] = c.G
-				dst.Pix[di+2] = c.B
-				dst.Pix[di+3] = c.A
-				di += 4
-			}
-		}
+	img := ImgToNRGBA(src)
+	w, h := img.Bounds().Max.X, img.Bounds().Max.Y
+
+	newimg := image.NewNRGBA(img.Bounds())
+	draw.Draw(newimg, img.Bounds(), img, image.Point{}, draw.Src)
+
+	blur := StackBlur(img, uint32(p.BlurRadius))
+	if p.MaxPoints < 1 {
+		return blur, nil, nil
 	}
 
-	return dst
+	gray := Grayscale(blur)
+	if p.Grayscale {
+		srcImg = gray
+	} else {
+		srcImg = newimg
+	}
+
+	blurMatrix := setBlurMatrix(p.BlurFactor)
+	edgeMatrix := setEdgeMatrix(p.EdgeFactor)
+
+	convolutionFilter(blurMatrix, img, float64(len(blurMatrix)))
+	convolutionFilter(edgeMatrix, img, float64(p.EdgeFactor))
+
+	points := p.GetPoints(img, p.PointsThreshold, p.MaxPoints)
+	triangles := delaunay.Init(w, h).Insert(points).GetTriangles()
+
+	return srcImg, triangles, points
 }

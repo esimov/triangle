@@ -1,22 +1,22 @@
 package triangle
 
-import "image"
-
 // Point defines a struct having as components the point X and Y coordinate position.
-type Point = image.Point
+type Point struct {
+	X, Y float64
+}
 
 // Node defines a struct having as components the node X and Y coordinate position.
 type Node struct {
-	X, Y int
+	X, Y float64
 }
 
 // circle defines the basic circle element.
 type circle struct {
-	x, y, radius int
+	x, y, radius float64
 }
 
 // newNode instantiate a new node.
-func newNode(x, y int) Node {
+func newNode(x, y float64) Node {
 	return Node{x, y}
 }
 
@@ -49,9 +49,9 @@ func newEdge(p0, p1 Node) [2]Node {
 }
 
 // isEq check if two edge are approximately equals.
-func (e edge) isEq(edge edge) bool {
-	na := e.nodes
-	nb := edge.nodes
+func (this edge) isEq(e edge) bool {
+	na := this.nodes
+	nb := e.nodes
 	na0, na1 := na[0], na[1]
 	nb0, nb1 := nb[0], nb[1]
 
@@ -85,10 +85,10 @@ func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 
 	m := p1.X*p1.X - p0.X*p0.X + p1.Y*p1.Y - p0.Y*p0.Y
 	u := p2.X*p2.X - p0.X*p0.X + p2.Y*p2.Y - p0.Y*p0.Y
-	s := 1.0 / (2.0 * (float64(ax*by) - float64(ay*bx)))
+	s := 1.0 / (2.0 * float64(ax*by-ay*bx))
 
-	circle.x = int(float64((p2.Y-p0.Y)*m+(p0.Y-p1.Y)*u) * s)
-	circle.y = int(float64((p0.X-p2.X)*m+(p1.X-p0.X)*u) * s)
+	circle.x = float64((p2.Y-p0.Y)*m+(p0.Y-p1.Y)*u) * s
+	circle.y = float64((p0.X-p2.X)*m+(p1.X-p0.X)*u) * s
 
 	// Calculate the distance between the node points and the triangle circumcircle.
 	dx := p0.X - circle.x
@@ -103,15 +103,15 @@ func (t Triangle) newTriangle(p0, p1, p2 Node) Triangle {
 
 // Delaunay defines the main components of the triangulation.
 type Delaunay struct {
-	width     int
-	height    int
+	width     float64
+	height    float64
 	triangles []Triangle
 }
 
 // Init initialize the Delaunay structure.
 func (d *Delaunay) Init(width, height int) *Delaunay {
-	d.width = width
-	d.height = height
+	d.width = float64(width)
+	d.height = float64(height)
 
 	d.triangles = nil
 	d.clear()
@@ -136,8 +136,8 @@ func (d *Delaunay) clear() {
 func (d *Delaunay) Insert(points []Point) *Delaunay {
 	var (
 		i, j, k      int
-		x, y, dx, dy int
-		distSq       int
+		x, y, dx, dy float64
+		distSq       float64
 		polygon      []edge
 		edges        []edge
 		temps        []Triangle
