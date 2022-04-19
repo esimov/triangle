@@ -17,20 +17,19 @@ func BenchmarkDraw(b *testing.B) {
 	if err != nil {
 		b.Skipf("Failed decoding image: %v", err)
 	}
-	p := Image{
-		Processor: Processor{
-			MaxPoints:       2500,
-			BlurRadius:      4,
-			SobelThreshold:  10,
-			PointsThreshold: 20,
-			StrokeWidth:     0,
-			Wireframe:       0,
-		},
+	proc := Processor{
+		MaxPoints:       2500,
+		BlurRadius:      2,
+		SobelThreshold:  10,
+		PointsThreshold: 20,
+		StrokeWidth:     0,
+		Wireframe:       0,
 	}
-	var out image.Image
+	p := Image{Processor: proc}
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _, _, err = p.Draw(img, out, func() {})
+		_, _, _, err = p.Draw(img, proc, func() {})
 		if err != nil {
 			b.Fatalf("Failed drawing triangle benchmark image: %v", err)
 		}
