@@ -46,7 +46,6 @@ func (p *Processor) GetPoints(img *image.NRGBA, threshold, maxPoints int) []Poin
 	}
 	ilen := len(points)
 	limit := int(float64(ilen) * p.PointRate)
-
 	if limit > maxPoints {
 		limit = maxPoints
 	}
