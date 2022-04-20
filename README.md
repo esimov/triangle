@@ -131,12 +131,12 @@ $ triangle -in samples/input.jpg -out output.png -wf=2 -pts=5500 -stroke=1 -blur
 
 ## Examples
 
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_3.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_3.png" width=460/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_4.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_4.png" width=460/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_5.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_5.png" width=460/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_6.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_6.png" width=460/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_8.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_8.png" width=460/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_9.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_9.png" width=460/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_3.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_3.png" width=410/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_4.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_4.png" width=410/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_5.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_5.png" width=410/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_6.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_6.png" width=410/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_8.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_8.png" width=410/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_9.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_9.png" width=410/></a>
 ![Triangle1](https://github.com/esimov/triangle/blob/master/output/sample_0.png)
 ![Triangle2](https://github.com/esimov/triangle/blob/master/output/sample_1.png)
 ![Triangle3](https://github.com/esimov/triangle/blob/master/output/sample_11.png)
