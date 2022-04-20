@@ -104,7 +104,7 @@ The following flags are supported:
 | `so` | 10 | Sobel filter threshold |
 | `sl` | false | Use solid stroke color (yes/no) |
 | `wf` | 0 | Wireframe mode (0: without stroke, 1: with stroke, 2: stroke only) |
-| `sw` | 1 | Stroke width |
+| `st` | 1 | Stroke width |
 | `gr` | false | Output in grayscale mode |
 | `web` | false | Open the SVG file in the web browser |
 | `bg` | ' ' | Background color (specified as hex value) |
@@ -160,8 +160,8 @@ Setting a lower points threshold, the resulted image will be more like a cubic p
 
 Here are some examples you can experiment with:
 ```bash
-$ triangle -in samples/input.jpg -out output.png -wf=0 -pts=3500 -stroke=2 -blur=2
-$ triangle -in samples/input.jpg -out output.png -wf=2 -pts=5500 -stroke=1 -blur=10
+$ triangle -in samples/input.jpg -out output.png -wf=0 -pts=3500 -st=2 -bl=2
+$ triangle -in samples/input.jpg -out output.png -wf=2 -pts=5500 -st=1 -bl=10
 ```
 
 ## Examples
