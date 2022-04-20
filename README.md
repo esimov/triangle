@@ -4,7 +4,7 @@
 [![build](https://github.com/esimov/triangle/actions/workflows/build.yml/badge.svg)](https://github.com/esimov/triangle/actions/workflows/build.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/esimov/triangle.svg)](https://pkg.go.dev/github.com/esimov/triangle)
 [![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
-[![release](https://img.shields.io/badge/release-v1.3.0-blue.svg)](https://github.com/esimov/triangle/releases/tag/v1.3.0)
+[![release](https://img.shields.io/badge/release-v2.0.0-blue.svg)](https://github.com/esimov/triangle/releases/tag/v2.0.0)
 [![homebrew](https://img.shields.io/badge/homebrew-v1.2.4-orange.svg)](https://formulae.brew.sh/formula/triangle)
 
 **▲ Triangle** is a tool for generating triangulated image using [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes a source image and converts it to an abstract image composed of tiles of triangles.
@@ -15,16 +15,8 @@
 * First the image is blured out to smoth out the sharp pixel edges. The more blured an image is the more diffused the generated output will be.
 * Second the resulted image is converted to grayscale mode.
 * Then a [sobel](https://en.wikipedia.org/wiki/Sobel_operator) filter operator is applied on the grayscaled image to obtain the image edges. An optional threshold value is applied to filter out the representative pixels of the resulted image.
+* A convolution filter operator is applied over the image data in order to adjust its final aspect prior running the delaunay triangulation process.
 * Lastly the delaunay algorithm is applied on the pixels obtained from the previous step.
-
-```go
-blur = tri.Stackblur(img, uint32(width), uint32(height), uint32(*blurRadius))
-gray = tri.Grayscale(blur)
-sobel = tri.SobelFilter(gray, float64(*sobelThreshold))
-points = tri.GetEdgePoints(sobel, *pointsThreshold, *maxPoints)
-
-triangles = delaunay.Init(width, height).Insert(points).GetTriangles()
-```
 
 ### Features
 
@@ -67,18 +59,21 @@ The following flags are supported:
 | --- | --- | --- |
 | `in` | n/a | Source image |
 | `out` | n/a | Destination image |
-| `blur` | 4 | Blur radius |
+| `bl` | 2 | Blur radius |
+| `nf` | 0 | Noise factor |
+| `bf` | 1 | Blur factor |
+| `ef` | 6 | Edge factor |
+| `pr` | 0.075 | Point rate |
+| `pth` | 10 | Points threshold |
 | `pts` | 2500 | Maximum number of points |
-| `noise` | 0 | Noise factor |
-| `th` | 20 | Points threshold |
-| `sobel` | 10 | Sobel filter threshold |
-| `solid` | false | Use solid stroke color (yes/no) |
+| `so` | 10 | Sobel filter threshold |
+| `sl` | false | Use solid stroke color (yes/no) |
 | `wf` | 0 | Wireframe mode (0: without stroke, 1: with stroke, 2: stroke only) |
-| `stroke` | 1 | Stroke width |
-| `gray` | false | Output in grayscale mode |
+| `sw` | 1 | Stroke width |
+| `gr` | false | Output in grayscale mode |
 | `web` | false | Open the SVG file in the web browser |
 | `bg` | ' ' | Background color (specified as hex value) |
-| `c` | system spec. | Number of files to process concurrently
+| `cw` | system spec. | Number of files to process concurrently
 
 ## Key features
 
@@ -136,15 +131,15 @@ $ triangle -in samples/input.jpg -out output.png -wf=2 -pts=5500 -stroke=1 -blur
 
 ## Examples
 
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_3.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_3.png" width=410/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_4.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_4.png" width=410/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_5.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_5.png" width=410/></a>
-<a href="https://github.com/esimov/triangle/blob/master/output/sample_6.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_6.png" width=410/></a>
-![Sample_0](https://github.com/esimov/triangle/blob/master/output/sample_0.png)
-![Sample_1](https://github.com/esimov/triangle/blob/master/output/sample_1.png)
-![Sample_11](https://github.com/esimov/triangle/blob/master/output/sample_11.png)
-![Sample_8](https://github.com/esimov/triangle/blob/master/output/sample_8.png)
-
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_3.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_3.png" width=460/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_4.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_4.png" width=460/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_5.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_5.png" width=460/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_6.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_6.png" width=460/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_8.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_8.png" width=460/></a>
+<a href="https://github.com/esimov/triangle/blob/master/output/sample_9.png"><img src="https://github.com/esimov/triangle/blob/master/output/sample_9.png" width=460/></a>
+![Triangle1](https://github.com/esimov/triangle/blob/master/output/sample_0.png)
+![Triangle2](https://github.com/esimov/triangle/blob/master/output/sample_1.png)
+![Triangle3](https://github.com/esimov/triangle/blob/master/output/sample_11.png)
 
 ## License
 Copyright © 2018 Endre Simo
