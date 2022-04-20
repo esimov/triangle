@@ -1,4 +1,4 @@
-module github.com/esimov/triangle
+module github.com/esimov/triangle/v2
 
 go 1.18
 

@@ -8,13 +8,13 @@ Check the supported commands by typing:
 
 Using Go interfaces the API can expose the result either as raster or vector type.
 
-Example to generate triangulated image and output the result as raster type:
+Example to generate triangulated image and output the result as a raster type:
 
 	package main
 
 	import (
 		"fmt"
-		"github.com/esimov/triangle"
+		"github.com/esimov/triangle/v2"
 	)
 
 	func main() {
@@ -23,7 +23,7 @@ Example to generate triangulated image and output the result as raster type:
 		}
 
 		img := &triangle.Image{*p}
-		_, _, err = img.Draw(file, fq, func() {})
+		_, _, _, err := img.Draw(srcImg, p, func() {})
 		if err != nil {
 			fmt.Printf("Error on triangulation process: %s", err.Error())
 		}
@@ -36,7 +36,7 @@ Example to generate triangulated image and output the result as SVG:
 
 	import (
 		"fmt"
-		"github.com/esimov/triangle"
+		"github.com/esimov/triangle/v2"
 	)
 
 	func main() {
@@ -52,7 +52,7 @@ Example to generate triangulated image and output the result as SVG:
 			StrokeLineCap: "round", //butt, round, square
 			Processor:     *p,
 		}
-		_, _, err = svg.Draw(file, fq, func() {
+		_, _, _, err := svg.Draw(srcImg, p, func() {
 			// Call the closure function
 		})
 		if err != nil {
@@ -60,5 +60,5 @@ Example to generate triangulated image and output the result as SVG:
 		}
 	}
 
- */
+*/
 package triangle

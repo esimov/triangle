@@ -86,41 +86,8 @@ func ImgToNRGBA(img image.Image) *image.NRGBA {
 	return dst
 }
 
-// setBlurMatrix populates a matrix table with values used in conjunction with the convolution filter operator.
-func setBlurMatrix(size int) []float64 {
-	var (
-		side   = size*2 + 1
-		length = side * side
-		matrix = make([]float64, length)
-	)
-
-	for i := 0; i < length; i++ {
-		matrix[i] = 1
-	}
-
-	return matrix
-}
-
-// setEdgeMatrix populates a matrix table with values used in conjunction with the convolution filter operator.
-func setEdgeMatrix(size int) []float64 {
-	var (
-		side   = size*2 + 1
-		length = side * side
-		center = int(length / 2)
-		matrix = make([]float64, length)
-	)
-
-	for i := 0; i < length; i++ {
-		if i == center {
-			matrix[i] = float64(-length)
-		} else {
-			matrix[i] = 1
-		}
-
-	}
-	return matrix
-}
-
+// convolutionFilter applies a mathematical operation over the source image by taking
+// the matrix table as input parameter and convolving the matrix values over the pixels data.
 func convolutionFilter(matrix []float64, img *image.NRGBA, divisor float64) {
 	var (
 		divscalar float64
@@ -197,4 +164,39 @@ func Max[T constraints.Ordered](values ...T) T {
 		}
 	}
 	return acc
+}
+
+// setBlurMatrix populates a matrix table with values used in conjunction with the convolution filter operator.
+func setBlurMatrix(size int) []float64 {
+	var (
+		side   = size*2 + 1
+		length = side * side
+		matrix = make([]float64, length)
+	)
+
+	for i := 0; i < length; i++ {
+		matrix[i] = 1
+	}
+
+	return matrix
+}
+
+// setEdgeMatrix populates a matrix table with values used in conjunction with the convolution filter operator.
+func setEdgeMatrix(size int) []float64 {
+	var (
+		side   = size*2 + 1
+		length = side * side
+		center = int(length / 2)
+		matrix = make([]float64, length)
+	)
+
+	for i := 0; i < length; i++ {
+		if i == center {
+			matrix[i] = float64(-length)
+		} else {
+			matrix[i] = 1
+		}
+
+	}
+	return matrix
 }

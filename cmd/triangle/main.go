@@ -21,8 +21,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/esimov/triangle"
-	"github.com/esimov/triangle/utils"
+	"github.com/esimov/triangle/v2"
+	"github.com/esimov/triangle/v2/utils"
 	"golang.org/x/image/bmp"
 	"golang.org/x/term"
 )
@@ -85,7 +85,7 @@ func main() {
 		maxPoints       = flag.Int("pts", 2500, "Maximum number of points")
 		wireframe       = flag.Int("wf", 0, "Wireframe mode (0: without stroke, 1: with stroke, 2: stroke only)")
 		noise           = flag.Int("nf", 0, "Noise factor")
-		strokeWidth     = flag.Float64("stw", 1, "Stroke width")
+		strokeWidth     = flag.Float64("sw", 1, "Stroke width")
 		isStrokeSolid   = flag.Bool("sl", false, "Use solid stroke color (yes/no)")
 		grayscale       = flag.Bool("gr", false, "Output in grayscale mode")
 		showInBrowser   = flag.Bool("web", false, "Open the SVG file in the web browser")
