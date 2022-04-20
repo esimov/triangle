@@ -51,7 +51,11 @@ $ brew install triangle
 ## API usage
 ```go
 proc := &triangle.Processor{
-	// initialize processor struct
+	MaxPoints:  2500,
+	BlurRadius: 2,
+	PointRate:  0.75,
+	BlurFactor: 1,
+	EdgeFactor: 6,
 }
 
 img := &triangle.Image{
@@ -64,16 +68,16 @@ if err != nil {
 }
 
 // decode image
-src, err := tri.DecodeImage(input)
+src, err := img.DecodeImage(input)
 if err != nil {
 	log.Fatalf("error decoding the image: %v", err)
 }
-res, _, _, err := img.Draw(src, proc, func() {})
+res, _, _, err := img.Draw(src, *proc, func() {})
 if err != nil {
 	log.Fatalf("error generating the triangles: %v", err)
 }
 
-output, err := os.Open("output.png")
+output, err := os.Create("output.png")
 if err != nil {
 	log.Fatalf("error opening the destination file: %v", err)
 }
