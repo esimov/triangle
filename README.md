@@ -48,6 +48,41 @@ The library can be installed via Homebrew too.
 $ brew install triangle
 ```
 
+## API usage
+```go
+proc := &triangle.Processor{
+	// initialize processor struct
+}
+
+img := &triangle.Image{
+	Processor: *proc,
+}
+
+input, err := os.Open("input.jpg")
+if err != nil {
+	log.Fatalf("error opening the source file: %v", err)
+}
+
+// decode image
+src, err := tri.DecodeImage(input)
+if err != nil {
+	log.Fatalf("error decoding the image: %v", err)
+}
+res, _, _, err := img.Draw(src, proc, func() {})
+if err != nil {
+	log.Fatalf("error generating the triangles: %v", err)
+}
+
+output, err := os.Open("output.png")
+if err != nil {
+	log.Fatalf("error opening the destination file: %v", err)
+}
+
+// encode image
+png.Encode(output, res)
+
+```
+
 ## Supported commands
 
 ```bash
