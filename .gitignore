@@ -3,3 +3,4 @@
 *.svg
 !output/*
 packages/
+/dist
