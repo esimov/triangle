@@ -2,6 +2,7 @@ project_name: triangle
 builds:
   -
     binary: "triangle"
+    dir: cmd/triangle
     env:
       - CGO_ENABLED=0
     goos:
