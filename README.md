@@ -5,7 +5,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/esimov/triangle.svg)](https://pkg.go.dev/github.com/esimov/triangle)
 [![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
 [![release](https://img.shields.io/badge/release-v2.0.0-blue.svg)](https://github.com/esimov/triangle/releases/tag/v2.0.0)
-[![homebrew](https://img.shields.io/badge/homebrew-v1.2.5-orange.svg)](https://formulae.brew.sh/formula/triangle)
+[![homebrew](https://img.shields.io/badge/homebrew-v2.0.0-orange.svg)](https://formulae.brew.sh/formula/triangle)
 
 **▲ Triangle** is a tool for generating triangulated image using [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation). It takes a source image and converts it to an abstract image composed of tiles of triangles.
 
