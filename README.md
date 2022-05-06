@@ -36,8 +36,7 @@ Head over to this [subtopic](#key-features) to get a better understanding of the
 
 ## Installation and usage
 ```bash
-$ go get -u -f github.com/esimov/triangle/cmd/triangle
-$ go install
+$ go install github.com/esimov/triangle/v2/cmd/triangle@v2.0.0 
 ```
 You can also download the binary file from the [releases](https://github.com/esimov/triangle/releases) folder.
 
