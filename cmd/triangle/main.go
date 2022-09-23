@@ -129,7 +129,7 @@ func main() {
 	spinner = utils.NewSpinner(spinnerText, time.Millisecond*200, true)
 
 	// Supported input image file types.
-	srcExts := []string{".jpg", ".jpeg", ".png"}
+	supportedExt := []string{".jpg", ".jpeg", ".png", ".bmp"}
 
 	// Supported output image file types.
 	destExts := []string{".jpg", ".jpeg", ".png", ".svg"}
@@ -198,7 +198,7 @@ func main() {
 		done := make(chan interface{})
 		defer close(done)
 
-		paths, errc := walkDir(done, *source, srcExts)
+		paths, errc := walkDir(done, *source, supportedExt)
 
 		wg.Add(*workers)
 		for i := 0; i < *workers; i++ {
@@ -224,7 +224,7 @@ func main() {
 		}
 
 	case mode.IsRegular() || mode&os.ModeNamedPipe != 0: // check for regular files or pipe commands
-		ext := filepath.Ext(*destination)
+		ext := strings.ToLower(filepath.Ext(*destination))
 		if !inSlice(ext, destExts) && *destination != pipeName {
 			log.Fatalf(decorateText(fmt.Sprintf("File type not supported: %v", ext), ErrorMessage))
 		}
@@ -270,7 +270,7 @@ func main() {
 func walkDir(
 	done <-chan interface{},
 	src string,
-	srcExts []string,
+	inputExt []string,
 ) (<-chan string, <-chan error) {
 	pathChan := make(chan string)
 	errChan := make(chan error, 1)
@@ -290,13 +290,12 @@ func walkDir(
 
 			// Get base file extension.
 			bfx := filepath.Ext(info.Name())
-			for _, ext := range srcExts {
-				if ext == bfx {
+			for _, ext := range inputExt {
+				if ext == strings.ToLower(bfx) {
 					isFileSupported = true
 					break
 				}
 			}
-
 			if isFileSupported {
 				select {
 				case <-done:
@@ -405,7 +404,10 @@ func processor(in, out string, proc *triangle.Processor, fn triangle.Fn) (
 		if err != nil {
 			return nil, nil, err
 		}
-		img, triangles, points, err = draw(svg, src, proc, fn)
+		_, triangles, points, err = draw(svg, src, proc, fn)
+		if err != nil {
+			return nil, nil, err
+		}
 
 		tmpl := template.Must(template.New("svg").Parse(SVGTemplate))
 		if err := tmpl.Execute(output, svg); err != nil {
@@ -421,8 +423,14 @@ func processor(in, out string, proc *triangle.Processor, fn triangle.Fn) (
 			return nil, nil, err
 		}
 		img, triangles, points, err = draw(tri, src, proc, fn)
+		if err != nil {
+			return nil, nil, err
+		}
 
 		err = encodeImage(img, output.(*os.File))
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	stopMsg := fmt.Sprintf("%s %s",
@@ -448,7 +456,7 @@ func draw(drawer triangle.Drawer, src image.Image, proc *triangle.Processor, fn 
 
 // encodeImage encodes the generated triangles into an image file type.
 func encodeImage(img image.Image, output *os.File) error {
-	ext := filepath.Ext(output.Name())
+	ext := strings.ToLower(filepath.Ext(output.Name()))
 	switch ext {
 	case "", ".jpg", ".jpeg":
 		if err := jpeg.Encode(output, img, &jpeg.Options{Quality: 100}); err != nil {
