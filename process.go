@@ -183,7 +183,7 @@ func (im *Image) Draw(src image.Image, proc Processor, fn Fn) (image.Image, []Tr
 
 	// Apply a noise on the final image.
 	if im.Noise > 0 {
-		newImg = Noise(im.Noise, newImg, newImg.Bounds().Dx(), newImg.Bounds().Dy())
+		addNoise(im.Noise, newImg.(*image.RGBA))
 	}
 	fn()
 	return newImg, triangles, points, err

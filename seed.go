@@ -14,19 +14,19 @@ type seed struct {
 	div       float64
 }
 
-// Noise applies a noise factor, like Adobe's grain filter in order to create a despeckle like image.
-func Noise(amount int, pxl image.Image, w, h int) *image.NRGBA64 {
-	noiseImg := image.NewNRGBA64(image.Rect(0, 0, w, h))
+// addNoise applies a noise factor, like Adobe's grain filter in order to create a despeckle like image.
+func addNoise(amount int, src *image.RGBA) {
+	size := src.Bounds().Size()
 	s := &seed{
 		a:         16807,
 		m:         0x7fffffff,
 		randomNum: 1.0,
 		div:       1.0 / 0x7fffffff,
 	}
-	for x := 0; x < w; x++ {
-		for y := 0; y < h; y++ {
+	for x := 0; x < size.X; x++ {
+		for y := 0; y < size.Y; y++ {
 			noise := (s.random() - 0.01) * float64(amount)
-			r, g, b, a := pxl.At(x, y).RGBA()
+			r, g, b, a := src.At(x, y).RGBA()
 			rf, gf, bf := float64(r>>8), float64(g>>8), float64(b>>8)
 
 			// Check if color does not overflow the maximum limit after noise has been applied.
@@ -38,10 +38,10 @@ func Noise(amount int, pxl image.Image, w, h int) *image.NRGBA64 {
 			r2 := Max(0, Min(255, uint8(rf)))
 			g2 := Max(0, Min(255, uint8(gf)))
 			b2 := Max(0, Min(255, uint8(bf)))
-			noiseImg.Set(x, y, color.RGBA{R: r2, G: g2, B: b2, A: uint8(a)})
+
+			src.Set(x, y, color.RGBA{R: r2, G: g2, B: b2, A: uint8(a)})
 		}
 	}
-	return noiseImg
 }
 
 // nextLongRand retrieve the next long random number.
