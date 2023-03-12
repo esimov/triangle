@@ -2,6 +2,7 @@
 # ![Triangle logo](https://user-images.githubusercontent.com/883386/32769128-4d9625c6-c923-11e7-9a96-030f2f0efff3.png)
 
 [![build](https://github.com/esimov/triangle/actions/workflows/build.yml/badge.svg)](https://github.com/esimov/triangle/actions/workflows/build.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/esimov/triangle)](https://goreportcard.com/report/github.com/esimov/triangle)
 [![Go Reference](https://pkg.go.dev/badge/github.com/esimov/triangle.svg)](https://pkg.go.dev/github.com/esimov/triangle)
 [![license](https://img.shields.io/github/license/esimov/triangle)](./LICENSE)
 [![release](https://img.shields.io/badge/release-v2.0.0-blue.svg)](https://github.com/esimov/triangle/releases/tag/v2.0.0)
